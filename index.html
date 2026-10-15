@@ -1,162 +1,1065 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex">
-<title>Espace prospection Nosho</title>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>CRM prospection Nosho</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
-/* Layout: one column; search + pinned row, then link groups by category as dense two/three-column lists; add form slides open under the header */
+/* Layout: one working column — summary band (KPIs + segmented progress), due callbacks strip, filters, then a dense call list with expandable rows */
 :root{
   --bg:#f4f6f6; --surface:#ffffff; --surface-2:#eef2f2; --line:#d9e0e0;
-  --fg:#16211f; --muted:#5d6b69; --accent:#0e6b62; --accent-soft:#d8ece9; --on-accent:#ffffff; --danger:#b33a3a;
+  --fg:#16211f; --muted:#5d6b69; --accent:#0e6b62; --accent-soft:#d8ece9; --on-accent:#ffffff;
+  --s-todo:#8a9795; --s-noans:#b7791f; --s-msg:#c9a227; --s-back:#2f6fb3; --s-rdv:#1e8a4c; --s-no:#b33a3a; --s-bad:#6b4fa0;
+  --land:#dfe6e5; --land-2:#cfdcda;
   --font-body:"Instrument Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --r:10px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --land:#243230; --land-2:#2d3f3c;
   --bg:#0f1514; --surface:#17201f; --surface-2:#1e2928; --line:#2c3a38;
-  --fg:#e5eceb; --muted:#94a3a1; --accent:#4fc2b4; --accent-soft:#18383a; --on-accent:#0b1413; --danger:#e57373; color-scheme:dark}}
+  --fg:#e5eceb; --muted:#94a3a1; --accent:#4fc2b4; --accent-soft:#18383a; --on-accent:#0b1413;
+  --s-todo:#7d8b89; --s-noans:#d9a24a; --s-msg:#e0c45a; --s-back:#6aa6e8; --s-rdv:#4cc27f; --s-no:#e57373; --s-bad:#a68be0;
+  color-scheme:dark}}
 :root[data-theme="dark"]{
+  --land:#243230; --land-2:#2d3f3c;
   --bg:#0f1514; --surface:#17201f; --surface-2:#1e2928; --line:#2c3a38;
-  --fg:#e5eceb; --muted:#94a3a1; --accent:#4fc2b4; --accent-soft:#18383a; --on-accent:#0b1413; --danger:#e57373; color-scheme:dark}
+  --fg:#e5eceb; --muted:#94a3a1; --accent:#4fc2b4; --accent-soft:#18383a; --on-accent:#0b1413;
+  --s-todo:#7d8b89; --s-noans:#d9a24a; --s-msg:#e0c45a; --s-back:#6aa6e8; --s-rdv:#4cc27f; --s-no:#e57373; --s-bad:#a68be0;
+  color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.45}
-.wrap{max-width:1040px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
-header{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
-h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.wrap{max-width:1080px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+header h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted)}
-.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-input,select,textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
-#q{min-width:0;width:260px;max-width:100%}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi span{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.bar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--surface-2)}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.due{background:var(--accent-soft);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.due h2,.sec h2{margin:0;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.due-list{display:flex;flex-wrap:wrap;gap:8px}
+.due-list button{font:inherit;font-size:13px;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:99px;padding:5px 12px;cursor:pointer}
+.due-list button em{font-style:normal;color:var(--muted);margin-left:6px;font-size:12px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip small{font-variant-numeric:tabular-nums;opacity:.7}
+select,input,textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+#q{flex:1 1 200px;min-width:0}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.btn{font:inherit;font-weight:600;background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
-.btn.ghost{background:none;color:var(--fg);border:1px solid var(--line);font-weight:500}
-.btn.danger{background:var(--danger);color:#fff}
-.btn:disabled{opacity:.5;cursor:not-allowed}
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.zone-h{padding:8px 14px;background:var(--surface-2);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;border-top:1px solid var(--line)}
+.zone-h:first-child{border-top:0}
+.row{border-top:1px solid var(--line)}
+.zone-h + .row{border-top:0}
+.row-main{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1.3fr) minmax(0,1.1fr) 24px;gap:12px;align-items:center;padding:11px 14px;cursor:pointer;width:100%;text-align:left;background:none;border:0;font:inherit;color:inherit}
+.row-main:hover{background:var(--surface-2)}
+.name{font-weight:600}
+.age{font-weight:500;font-size:11.5px;color:var(--muted);background:var(--surface-2);border-radius:99px;padding:1px 7px;margin-left:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sub{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phone{font-family:var(--font-mono);font-size:13px;font-weight:600;white-space:nowrap}
+.fiab{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--surface-2);white-space:nowrap}
+.when{font-size:11.5px;color:var(--muted);margin-top:3px}
+.when.late{color:var(--s-no);font-weight:600}
+.chev{color:var(--muted);transition:transform .15s}
+.row.open .chev{transform:rotate(90deg)}
+.detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;padding:4px 14px 18px}
+.facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;font-size:13px;align-content:start}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0;overflow-wrap:anywhere}
+.facts a{color:var(--accent)}
+.copy{font:inherit;font-size:11.5px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:6px;padding:1px 7px;margin-left:6px;cursor:pointer}
+.agenda{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+.ag-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.ag-head h2{margin:2px 0 0;font-size:18px;font-weight:700;text-transform:none;letter-spacing:0}
+.ag-nav{display:flex;gap:6px}
+.ag-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.ag-day{font:inherit;color:var(--fg);background:var(--surface-2);border:1px solid transparent;border-radius:8px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;min-width:0}
+.ag-day span{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.ag-day b{font-size:17px;font-variant-numeric:tabular-nums}
+.ag-day em{font-style:normal;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ag-day.today b{color:var(--accent)}
+.ag-day.on{background:var(--fg);color:var(--bg)}
+.ag-day.on span,.ag-day.on em{color:var(--bg);opacity:.8}
+.ag-day.on.today b{color:var(--bg)}
+.ag-list{display:flex;flex-direction:column;gap:8px}
+.ag-item{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:14px;align-items:start;border-top:1px solid var(--line);padding-top:10px}
+.ag-item:first-child{border-top:0;padding-top:0}
+.ag-time b{font-family:var(--font-mono);font-size:16px}
+.ag-time small{color:var(--muted);font-size:12px;display:block}
+.late-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--s-no);text-transform:uppercase;letter-spacing:.05em}
+.ag-main .name{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ag-note{font-size:12.5px;color:var(--muted);margin-top:4px;max-width:62ch}
+.ag-act{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.ag-empty{color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ag-empty strong{color:var(--fg)}
+@media (max-width:760px){.ag-item{grid-template-columns:minmax(0,1fr)}.ag-act{align-items:flex-start}.ag-day em{display:none}}
+.mapwrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px;align-items:stretch}
+.map-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.map-tools{display:flex;gap:6px;padding:10px 12px 0;flex-wrap:wrap}
+#map{display:block;width:100%;height:520px;touch-action:manipulation}
+#map .land{fill:var(--land);stroke:var(--surface);stroke-width:.8px;vector-effect:non-scaling-stroke}
+#map .arr{fill:var(--land-2);stroke:var(--surface);stroke-width:1px;vector-effect:non-scaling-stroke}
+#map .pin{cursor:pointer;outline:none}
+#map .pin circle{stroke:var(--surface);stroke-width:2px;vector-effect:non-scaling-stroke}
+#map .pin.dim{opacity:.28}
+#map .pin.sel circle.dot-c{stroke:var(--fg);stroke-width:2.5px}
+#map .pin:focus-visible circle.dot-c{stroke:var(--accent);stroke-width:3px}
+#map .pin .ring{fill:none;stroke:var(--s-no);stroke-width:1.6px;stroke-dasharray:3 2}
+#map .pin text{font-family:var(--font-body);font-weight:700;fill:var(--fg);paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round;vector-effect:non-scaling-stroke;pointer-events:none}
+.map-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.map-card .big{font-family:var(--font-mono);font-size:20px;font-weight:600}
+.map-card h2{margin:0;font-size:18px;font-weight:700;text-wrap:balance}
+.map-empty{color:var(--muted);display:flex;flex-direction:column;gap:6px;justify-content:center;height:100%}
+@media (max-width:760px){.mapwrap{grid-template-columns:minmax(0,1fr)}#map{height:420px}}
+.coordo{border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:2px}
+.coordo-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
 .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
-.pinned{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
-.pin{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;text-decoration:none;color:inherit;min-width:0;position:relative}
-.pin:hover{border-color:var(--accent)}
-.pin.main{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-.pin.main .dom,.pin.main .note{color:var(--on-accent);opacity:.85}
-.pin b{font-size:15px}
-.dom{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.note{font-size:12.5px;color:var(--muted)}
-.group{display:flex;flex-direction:column;gap:8px}
-.group h2{margin:0;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;gap:8px}
-.group h2 small{font-weight:500;letter-spacing:0;text-transform:none}
-.list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);min-width:0}
-.item:nth-child(odd){border-right:1px solid var(--line)}
-.item a{color:inherit;text-decoration:none;display:flex;flex-direction:column;gap:1px;min-width:0}
-.item a:hover .t{color:var(--accent);text-decoration:underline}
-.t{font-weight:600}
-.acts{display:flex;gap:2px;opacity:.55}
-.item:hover .acts,.item:focus-within .acts{opacity:1}
-.ic{font:inherit;font-size:12px;background:none;border:1px solid transparent;color:var(--muted);border-radius:6px;padding:3px 7px;cursor:pointer}
-.ic:hover{border-color:var(--line);color:var(--fg)}
-.ic[aria-pressed="true"]{color:var(--accent)}
-.form{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.grid label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
-.grid .span2{grid-column:span 2}
-.grid input,.grid select,.grid textarea{width:100%}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.msg{font-size:12.5px;color:var(--muted)}.msg.err{color:var(--danger)}
-.empty{padding:24px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:var(--r)}
+.coordo-name{font-size:16px;font-weight:700}
+.crm-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.conn{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.cchip{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.cchip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--s-todo)}
+.cchip.on::before{background:var(--s-rdv)}.cchip.warn::before{background:var(--s-noans)}
+[hidden]{display:none!important}
+.addbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+.add-ai{background:var(--surface-2);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.add-ai label,.add-grid label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.add-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.add-grid .span2{grid-column:span 2}
+.add-grid input,.add-grid select,.add-grid textarea,.add-ai textarea{width:100%}
+@media (max-width:640px){.add-grid{grid-template-columns:minmax(0,1fr)}.add-grid .span2{grid-column:auto}}
+.ai-msg{font-size:12.5px;color:var(--muted)}.ai-msg.ok{color:var(--s-rdv)}.ai-msg.err{color:var(--s-no)}
+.confirm{border:1px solid var(--accent);background:var(--accent-soft);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+details.more summary,details.allo summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
+details.allo{display:flex;flex-direction:column;gap:6px}
+details.allo textarea{width:100%;margin-top:6px}
+.mailbox{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.mailbox h3{margin:0;font-size:13px;font-weight:600}
+.mailbox label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.mailbox input{width:100%}
+.mailbox textarea{min-height:200px;font-size:13.5px;line-height:1.5}
+.logbox{display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border-radius:var(--r);padding:12px}
+.logbox h3{margin:0;font-size:13px;font-weight:600}
+.outcomes{display:flex;flex-wrap:wrap;gap:6px}
+.outcomes .chip[aria-pressed="true"]{background:var(--sc);border-color:var(--sc);color:#fff}
+.logrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.logrow label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.logrow .grow{flex:1 1 180px;min-width:0}
+.logrow .grow input{width:100%}
+.btn{font:inherit;font-weight:600;background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:none;color:var(--muted);border:1px solid var(--line);font-weight:500}
+textarea{width:100%;min-height:64px;resize:vertical}
+.hist{display:flex;flex-direction:column;gap:6px;font-size:12.5px;margin:0;padding:0;list-style:none}
+.hist li{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px}
+.hist time{color:var(--muted);font-variant-numeric:tabular-nums}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px}
-@media (max-width:700px){.list{grid-template-columns:minmax(0,1fr)}.item:nth-child(odd){border-right:0}.grid{grid-template-columns:minmax(0,1fr)}.grid .span2{grid-column:auto}#q{width:100%}}
+@media (max-width:760px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpis .kpi:first-child{grid-column:span 2}
+  .row-main{grid-template-columns:minmax(0,1fr) auto 18px;grid-template-areas:"n s c" "p p p"}
+  .row-main .c-n{grid-area:n}.row-main .c-p{grid-area:p}.row-main .c-s{grid-area:s;text-align:right}.row-main .chev{grid-area:c}
+  .detail{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){.chev{transition:none}}
+[hidden]{display:none!important}
+body{margin:0}
+.quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.quick a{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;color:var(--fg);text-decoration:none;background:var(--surface)}
+.quick a:hover{border-color:var(--accent);color:var(--accent)}
+.head-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.setup{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px}
+.setup .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.setup .col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.setup h3{margin:0;font-size:14px}
+.setup ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.setup ol b{color:var(--fg)}
+.setup a{color:var(--accent)}
+.setup label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.setup input{width:100%}
+.setup p{margin:0;font-size:13px;color:var(--muted)}
 </style>
-<style>[hidden]{display:none!important}body{margin:0}</style>
-</head><body>
+</head>
+<body>
+
 <div class="wrap">
-  <header>
+  <header class="crm-head">
     <div>
-      <span class="eyebrow">Alexandre · Nosho</span>
-      <h1>Espace prospection</h1>
-      <p>Tous les outils et pages de la prospection, au même endroit.</p>
-      <p class="note" style="margin-top:6px">Les liens ajoutés depuis cette page restent dans ce navigateur. Pour qu'ils apparaissent partout, demandez à Claude de les ajouter.</p>
+      <h1>CRM prospection Nosho</h1>
+      <p id="head-sub">Vos prospects, leurs appels, leurs emails et leurs relances au même endroit.</p>
+      <div class="conn" id="conn"></div>
+      <nav class="quick" aria-label="Raccourcis"><a href="https://web.withallo.com/" target="_blank" rel="noopener">Allo</a><a href="https://mail.google.com/" target="_blank" rel="noopener">Gmail</a><a href="https://calendly.com/alexandre-nosho/15-minutes-meeting" target="_blank" rel="noopener">Calendly</a><a href="https://pitchbase.app/app#history" target="_blank" rel="noopener">PitchBase</a><a href="https://drive.google.com/file/d/1rVnuwFMX1z4qENpEnRNrhVBT76pmUqp5/view" target="_blank" rel="noopener">Pipeline (Drive)</a><a href="https://www.cptshero.fr/annuaire-cpts/region/auvergne-rhone-alpes" target="_blank" rel="noopener">Annuaire CPTS</a><a href="https://www.coordo.fr/cpts/departement/69-rhone/" target="_blank" rel="noopener">Coordo</a><a href="https://annuaire-entreprises.data.gouv.fr/" target="_blank" rel="noopener">Annuaire entreprises</a><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a><a href="https://www.nosho.ai/en" target="_blank" rel="noopener">Nosho</a></nav>
     </div>
-    <div class="tools">
-      <input id="q" type="search" placeholder="Chercher un lien…" aria-label="Chercher un lien">
-      <button class="btn" id="addBtn" data-open="1">Ajouter un lien</button>
-    </div>
+    <div class="head-acts"><button class="btn ghost" data-setup="1">Réglages</button><button class="btn" data-addopen="1" id="addBtn">Ajouter au CRM</button></div>
   </header>
 
-  <form class="form" id="form" hidden>
-    <div class="row" style="justify-content:space-between"><b id="form-title">Nouveau lien</b><button type="button" class="btn ghost" data-close="1">Fermer</button></div>
-    <div class="grid">
-      <label>Nom *<input id="f-title" required></label>
-      <label>Adresse (https://…) *<input id="f-url" required placeholder="https://"></label>
-      <label>Catégorie<input id="f-cat" list="cats" placeholder="Choisir ou créer"><datalist id="cats"></datalist></label>
-      <label>Épingler en haut<select id="f-pin"><option value="0">Non</option><option value="1">Oui</option></select></label>
-      <label class="span2">Note<input id="f-note" placeholder="À quoi sert ce lien"></label>
+  <section class="setup" id="setup" hidden aria-label="Réglages">
+    <div class="ag-head"><div><span class="eyebrow">Réglages de cet appareil</span><h2 style="margin:2px 0 0;font-size:18px">Connecter le CRM</h2></div><button class="chip" data-setupclose="1">Fermer</button></div>
+    <p>Vos fiches et vos notes d'appels sont rangées dans votre dépôt GitHub <b>privé</b> suivi-cpts-lyon, jamais dans cette page publique. Les clés ci-dessous restent dans ce navigateur : elles ne sont envoyées qu'à GitHub et à Allo. À faire une seule fois par ordinateur ou téléphone.</p>
+    <div class="two">
+      <div class="col">
+        <h3>1. Jeton GitHub (obligatoire)</h3>
+        <ol>
+          <li><a href="https://github.com/settings/personal-access-tokens/new?name=CRM+Nosho&description=CRM+prospection+%28suivi-cpts-lyon%29&target_name=alexandre309&expires_in=365&contents=write" target="_blank" rel="noopener">Ouvrir la création du jeton</a> (nom et durée sont déjà remplis)</li>
+          <li>Repository access : <b>Only select repositories</b>, puis choisir <b>suivi-cpts-lyon</b></li>
+          <li>Permissions › Repository permissions › <b>Contents : Read and write</b></li>
+          <li><b>Generate token</b>, copier le jeton et le coller ici</li>
+        </ol>
+        <label>Jeton GitHub<input id="cfg-gh" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></label>
+      </div>
+      <div class="col">
+        <h3>2. Clé Allo (synchro automatique des appels)</h3>
+        <ol>
+          <li>Dans <a href="https://web.withallo.com/" target="_blank" rel="noopener">Allo</a> : <b>Réglages › API</b>, créer une clé</li>
+          <li>Autoriser la <b>lecture des conversations</b> (CONVERSATIONS_READ)</li>
+          <li>Copier la clé (ak_live_…) et la coller ici</li>
+        </ol>
+        <label>Clé API Allo<input id="cfg-allo" type="password" autocomplete="off" spellcheck="false" placeholder="ak_live_…"></label>
+        <label>Compte Gmail pour les envois (facultatif)<input id="cfg-gmail" type="email" autocomplete="off" placeholder="prenom@nosho.io"></label>
+      </div>
     </div>
-    <div class="row"><button class="btn" type="submit" id="f-save">Enregistrer</button><span class="msg" id="f-msg"></span></div>
-  </form>
-
-  <section id="pinSec" aria-label="Liens épinglés">
-    <div class="pinned" id="pinned"></div>
+    <div class="logrow"><button class="btn" data-cfgsave="1">Enregistrer et charger le CRM</button><button class="btn ghost" data-cfgclear="1">Effacer les clés de cet appareil</button><span class="ai-msg" id="cfg-msg"></span></div>
   </section>
 
-  <div id="groups"><div class="empty">Chargement des liens…</div></div>
+  <section class="agenda" id="unmatched" hidden aria-label="Appels Allo sans fiche"></section>
+
+  <section class="addbox" id="addbox" hidden aria-label="Ajouter un prospect">
+    <div class="ag-head"><div><span class="eyebrow">Nouveau prospect</span><h2 style="margin:2px 0 0;font-size:18px">Ajouter au CRM</h2></div><button class="chip" data-addclose="1">Fermer</button></div>
+    <div class="add-ai" id="add-ai" hidden>
+      <label>Coller une source (signature d'email, page web, notes, résumé Allo…) et laisser Claude remplir la fiche
+        <textarea id="add-raw" rows="4" placeholder="Ex. : Dr Martin, Centre de santé des Lilas, 12 rue…, 04 78 00 00 00, contact@…"></textarea></label>
+      <div class="logrow"><button class="btn ghost" data-addai="1">Remplir avec Claude</button><span class="ai-msg" id="add-ai-msg"></span></div>
+    </div>
+    <div class="add-grid">
+      <label>Nom de la structure *<input id="add-name" placeholder="CPTS, cabinet, centre…"></label>
+      <label>Type<select id="add-type"></select></label>
+      <label>Zone<select id="add-zone"></select></label>
+      <label>Ville / territoire<input id="add-terr"></label>
+      <label>Interlocuteur<input id="add-cname" placeholder="Prénom Nom"></label>
+      <label>Poste<input id="add-cpost" placeholder="Coordinatrice, directeur, secrétaire…"></label>
+      <label>Téléphone<input id="add-tel"></label>
+      <label>Email<input id="add-email" type="email"></label>
+      <label>Site<input id="add-site" placeholder="exemple.fr"></label>
+      <label>Adresse<input id="add-adr"></label>
+      <label class="span2">Notes<textarea id="add-notes" rows="2"></textarea></label>
+    </div>
+    <div class="logrow"><button class="btn" data-addsave="1">Créer la fiche</button><span class="ai-msg" id="add-msg"></span></div>
+  </section>
+
+  <section aria-label="Avancement">
+    <div class="kpis" id="kpis"></div>
+    <div style="margin-top:12px"><div class="bar" id="bar"></div><div class="legend" id="legend"></div></div>
+  </section>
+
+  <section class="agenda" id="agenda" aria-label="Relances prévues">
+    <div class="ag-head">
+      <div><span class="eyebrow">Emploi du temps</span><h2 id="ag-title">Relances du jour</h2></div>
+      <div class="ag-nav">
+        <button class="chip" data-agshift="-7" aria-label="Semaine précédente">‹</button>
+        <button class="chip" data-agtoday="1">Aujourd'hui</button>
+        <button class="chip" data-agshift="7" aria-label="Semaine suivante">›</button>
+      </div>
+    </div>
+    <div class="ag-week" id="ag-week"></div>
+    <div class="ag-list" id="ag-list"></div>
+  </section>
+
+  <section class="mapwrap" aria-label="Carte des CPTS">
+    <div class="map-box">
+      <div class="map-tools">
+        <button class="chip" data-view="metro" aria-pressed="true">Métropole de Lyon</button>
+        <button class="chip" data-view="rhone" aria-pressed="false">Tout le Rhône</button>
+      </div>
+      <svg id="map" viewBox="555 715 310 390" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Carte du Rhône : cliquez sur un point pour afficher la CPTS">
+        <path class="land" d="M160 735l-9-10 1-6 9-5 5-14 13 16 1-9 11-12 20 22 4 23-7-2-10 12-8 1-5-5-19-6zM167 50l1-13 11-15-2-6 18 2 5-12 12 7 5 17 16 16-1 8-18 3-7 10-11-2-9 5-20-8zM647 689l3 7-2 13-22-3 6-9 2-11 4-3-3-4 8-5-1-5 5 4zM450 595l11 3-2 25 6 5-22-3-8-8 0-9-6-8zM565 582l0 8-6-1-20 30-4 0-3-19-9-18 9-10 6 4zM0 484l16 4 5-11 7 1-4 9 6 12 4-11 3 3 8-1 3-8 6 13 8 3 6 14 5 0 3-5 11 6 17-9 3-9 13-11 6 1-2 22 10 11 0 15 7 1-2 9 4 7 4-1 6 8 5 0 0 20-7 4-1-3-4 4-12 1-6-1-8-10-8 18-11-3-16-18-11 3-2-6-10-3-9-11 10-5-3-12-9-11-14-7-3-5-18-2-6-5zM653 1262l-18 9-15 19-11 6-9-2-3-13-11-9-6-15-5-2 8-2-2-27 12-5 32 23 13 2 4 4 8-3 7 11zM275 707l3 8 5 1 2 10 11-1 17 7 11 9 3 13-9-6-20 6 1 5-11 7-35-1 1-18 10-17 2-12zM551 539l-21 20 2 13-9 10 10 23-35-6-5-15-10 6-25-9-4 2 4-22 12 10 7 2 2-4 8-1 1-7 9-2 4-6-1-3 7-2 8-8 16 2 7-14 15 8zM416 731l-20 27-12-9 3-10 6-4-9-4 4-10 3 2 2-3 13 9 6-4zM265 159l12 8 9 1 5-6 22-3 24-10 11 6 18 35-10 31-43-14-22 2-23-32-10-7 6-4zM552 475l-17 6-16 0 1-18-44 13-10-20 9-10 6-19 18-9 16 2 1 8 9-1 7 10 17 0-3 14zM257 946l5 11 22 10 4 30-39 21-10-9-6 0 0-7-8-3-9-12 9-15-4-3 4-10 10-7 7 6 9-12zM186 198l-18-12-2-12 25-8 5-4 11 14-3 1-2 9-12 0-2 4 4 5zM440 627l-2 16-18-2-17-9-21-2-1-3 3-14 6-1 2-7 8-7 10 11 6-4zM364 182l13 15 24-3 3 10-10 38-6 8 3 6-11 2-15 19-15 5-5-6-14-6 15-17-1-6 20-51zM571 312l-19 22-3 11 3 6-3 1-3-6-24-7-11-17-15-2-5-17 6-10-3-11 3 0 0-5-9-6 7-2 6-10 0-7 5-3 11 16 7 2 12-8 22-1-14 1 11 25-5 16 5 9 4-1 8 7zM455 688l8-14 10 13-8 15-10-6zM315 808l14 5 18-1 8-4 17 4-1 5-8 5-7 15 1 5-9 13-4 0-12 14-6-6-14 0-5-7 4-7-1-12-12 0-5-9 6-9zM355 808l-26 5-18-4-2-9 8-7 3-11 5-1 18 8 15 2-1 5-4-1zM466 406l6 13-4 11-30 8-3-3-11 8-12-5-9 12-6-2-2-7-17 2-6-9 5-9 13-3 21-1 2 9 5-7 14 3 9-14-2-8 7-10zM364 521l1 5 10 4 9 23-3 2 3 16-4 3 3 7-2 15 3 0-4 36 1-19-12 5-2-2-6 8-1-3-13 0-7-11 8-5-12 1-15-18 9-7-3-7 3-7 24-13 9-10zM396 668l-8 5-5-4-13 0-14-25 14-3 13-11 13 1-5 27zM526 989l-2-8 6-17 19 2 3-3 5 4 4-3 8 5 9-2 1 8 6 3 2 12-4 7-3-3 0 4-11 1 2 6-6-1-2 8-12 3-7-21zM509 952l-12-11-31-15 1-15 8 0 5-5 9-1 12-10 27-4-2 7 7 2 3 11-19 15zM707 889l7-22 24 7 14 7 4 28-29 13-5-5-20-8zM307 858l-8 1-5 6-22 4 2 10-12 3-10-8 0-12-4-6-7-3-7 5-8-8 6 3 6-11 7-1 0-5 15-11 9 8 24-5 5 9 12 0 1 12zM274 879l-2-10 22-4 11-8 7 7 14-1 6 6-8 10-14 5-5 5-14 2 0 8-5 3zM370 669l13 0 5 4-3 15 5 2 6 8-3 22-2 3-3-2-4 10-6-6-8 4-13-2 1-3-4-4-9 0-10-26 21-19 13 0zM726 677l-12 38-13 2-10-2-4 11-9 7-1-11-4-1-6-15 23-6 0-12 9-11 0-9zM628 809l20-13 7-21 14-10 13 7 12 29-14 12-17 3-9 11-6-6-15-3zM431 8l16-4 12 14 15-8-2-6 3-4 6 7 10-1 1 17 6 2 5 12 3-3 3 10-3 14-3-3-4 6-8-7-7 10-11-3-4 18-5-8-9 1-5 10-9-2-12 3-10-8-8 0-2-10 4-10-6-17 11-10 10-3-1-14zM441 297l-7-6 4-14 16 1 17-9 26 8-1 6-8 3-9 0-6-4-6 2 2 13-13-2-8 5-1-3zM297 428l-2 12 12-1 22 14-4 7 7 2-4 3 6 3 1 8-5 6-8-8-7 6-28-6-10 5-2-13-7-2-11 6-13-8 8-16 16-4 8-11 15-7zM161 864l-10 2-4 6-13 2-8-4 2-9-7-1 3-3-9-8-1-7 4-8 8-3-3-5 2-7 2 10 21-10-1-14-6-12 1-8 7-4 8 8 0 7 6 7 5 4 3-4-1 4 5 3-1 10 6 7-4 5 2 6-17 15 2 3zM235 512l7 0 11-8-1-10 20-9 8-9 25 0 9 4 4-5 2 4-5 14-13 14-5 12-9 5-2-4-1 8-19 12-10-2-10-22-13 0zM588 775l5 13 12 4 3 15-14 2-19-17 11-9zM257 1045l2-3-5-14 5-7-3 0 3-8 23-12 1 12 9 13 5 16-10 10 0-6zM530 964l-5-7-16-5 8-26 25-19 25 1 9-3 10 9-13 25-5 27zM532 813l23-5 5 13-2 12 7 6-4 3-11-7 1 9-24-15 3-3-5-8 10-1zM463 321l23 4 12-5 10 1 11 9 4 9-11 3-6 15 4 7-12 3 2 11-9 7-13 0-16-18 0-23-5-18zM595 1004l10-6 8 5-8 12-2 11 4 1 3 17-14 6 1-3-9 2-4-3-3-14-9-4 17-8-1-3 8-7zM439 643l0-19 17 1 16 8-3 32-3-1-1 10-5 1-5 13-5-1-3-11 3-1 0-9-13-13zM576 715l-6 3-4-2-8-12-9-34 10-3-2-5 3 0 1-7 5-4 1-10 6-2 8 6 2-5 16 1-6 7 3 0-2 42-6 14-9 3zM465 702l4 0-5 5-15-3-20 17-9-16-5-17 0-15 7-16 2-13-4-3 19 2-2 10 13 13 0 9-3 1 3 11 5 1 0 8zM401 1066l-4-6 2-14 19-7 28-19 8 7-7 14 1 20-12-1-22 11-10 2zM531 656l1 9-5 10-11 4-2 7-10 2 3 4-2 4-8-2-1 7-7-3-3-15 8-8-2-7 8 0-1-8 15-7zM520 122l2 4-2 7 12 4-2 8 7 3-1 9-9-3-6 16-3-6-10-4-16-16-14 3-2-5-2-6 19-15 22-2zM288 231l-6 12 6 4-9 7-10 0-8-9-2-17-14-36 3-3 12 4-3-23 11 7 22 28 1 16zM531 659l-3-34 7-6 4 14 14 1-1 4 9 0 7 4-8 20-3 0 2 5-14 4-11-15zM419 668l-23 0-5-10 5-27 28 13zM417 855l-9 7-26 1-7-17-17-12 5-13 8-4 6-20 15 14 2 15 5 4 4 19zM461 172l14 22 0 17-18-6-11 1-12-7-10-16-10 3-5-6 9-4 21 2 15-9zM520 680l-3 11 5 1 0 11 5 14-12 8-18 3-1-33 9 1 2-4-3-4 11-3 1-6zM313 290l2 19 9 8 1 11 10 9 1 8-12 31-17 2-7-5-6-12-19 7-4-1-8-12 4-7-1-13-8-19-7-3-7-23 19-6 3-4 18 7 21-3zM348 488l2 3 10-4 8 7 7-3 19 6 11-1 2-11 8 0 2-4 2 7 9 3-1 4 6 3-10 7 8 5-32 5-12-5-13-13-23 1zM252 1115l-18-15-10-3 0-17-8-9 7 4 4-8 17-4 3 2-1-6 10 3 8-5 4 3-6 17 7 11 1 12-6 0-12 7zM649 740l12 5 9 15-15 15-3 13-3-3 1-15-5-3 1-8-10-2 2-12 6 0zM585 1334l-5 1-10-5-10 3-20-27 6-1 1-9-6-12-19-12 37 3 12 22 14 14zM552 218l-7 39-9 2-12 8-7-2-11-16-5 5-3-10 4-27 25 9 23-13 4-1zM129 263l19 5 9 11-1 10 6 10-4 7-1 24-19 7-1 8-6 0-12-10-12 1-10 13-11 2-4 5 5-2 2 3-4 6 4 4-1 10-6 3 0 12-6 2-7-10-10-3 3-10 4 0-3-14 11-1-3-16 4-6-8-10 2-10 14-17 3-22 12-8 10 3zM358 834l17 12 7 17 26-2-2 6-6 3 6 24-21 19-9-2-22 6-5 7-12 0-15-11-9 6-10-14 2-16 20-10 10-15 9-9 4 0zM615 726l-1-10 7-9 7-2 20 4-6 22zM546 863l-1 7 10 1-6 8-10 7-5-1-1 6-22 3-6-11 4-1-2-12 8-5 10 4 8-5zM120 438l3-10 14 2 1-15 22-4 4-4 7 15 6-1 27 28-4 3-13-4-21 18-14 4-3 5-4 2-13-8-4 8-5-4 9-7 4-15-14-4zM629 665l13 4 1 5-8 5 3 4-6 6 0 8-10 11 0-7-6-2-1-14zM533 813l0-10-8-18 4-14-7-14 4 0 0-4 12 0-4-8 5-4-2-6 12-3 25 32 1 28-7 8-8 0-2 8-14 0zM466 456l9 18-2 4 6 1-3 10-28 2-7-7-8 1-9 6-16-23 12-2 0-10 9 2 6-5 6 3 4-3zM259 540l3 2-4 3-2 19 5 0-4 10-10-10-9 1 2-4-6-1-28-27 9-6 1-9 5 0 3-9 12-2 2 4-5 5 13 0 2 12zM527 716l9-3-2 16 5 12-5 4 4 8-12 0 0 4-5 0-7-10-11 7-5-4-6 4-8-20 31-9zM610 235l-3 20-13 20-35-17-14-1 7-39 15-2-1-12 20-1 5 15zM284 967l22-25 7 8 12 5 7-2 6 8-4 13-14 1-10 10-3 11 3 10-6 4-4 14-6 7-12-25 0-5 6-4zM515 1217l-23-10-2-30 38-21-2-8 3-3 7-2 3 5 2-3 2 9 7-10 11-2 1 14 9 18-14 10-6 15 3 14-8 15-18-15zM594 809l-4 4 8 2-1 8 5 8-7 8-18 9 1 2-8-3-1-6-11-8 2-12-5-13 3 0 1-8 11-1 5-7zM447 112l24 13 0-4 11-2 8 1 4-3 1 4-21 15 4 10-25-12zM424 768l-23 0-4-4-1-7 16-18 10 1 4 11 5 1zM525 192l-10-3-3 8-14 5-4 6-17-6-4-12-12-18-3-19 5-2 1-8 6-2 8 6 14-3 16 16 10 4zM647 712l3-25 41 11-10 5-13 1-11 14 0-4zM428 757l3-5-5-1-4-11-10-3 1-6 11-1 7-13 11-4 7-9 17 2-1 8 7 10-9 29-5-5-7 6-14-3zM680 733l-3 9-9 0-1-10-19 2 10-9-1-7 9-13 7 10 0 6 4 1-1 7zM677 742l1 29-9-6 1-5-5-11-13-8-1-5 16-4 1 10zM576 871l11 16 0 7-6 2-5 9-9 3-25-1-5 4-4-11-7-2 2-7 6-1 0-5 11-3 10-11zM441 624l-2 3-5-7-9-3-9-12-6 4-8-9 1-10 4 2 1-3 6 0 17 5 15-5 0 7-17 4 5 4 1 13zM584 1121l-2 8 4 7 31 13-28 18-18 7-9-18-1-14-11 2-7 10 0-7-3-2-1 3-3-5-10 5-12 0-4-4 1-14-9-4 16-2 2-8 15 7 15-4 8-10 3-15 6-6 12 19zM496 511l-1 6-10 7-7-5-1-7-7 5-15-3-3-23 24-2 3-10-6-1 1-3 46-12-1 18-3-4-11 2 1 9-3 6 6 4-1 5-7 0zM204 449l-7-12 16-14-2-12 13-11 2-8 14 4 15 10 3 11 14 7 3 9-4 7-19 6-8 16-17-13-12 6zM436 874l12-2 9-8 34 1 6-4-6-5 25 2-2 10-7 2 2 12-4 1 6 9-5 5-5-2-5 3-5-6-29-16-9-2-6 4zM162 1009l15-13 17-7 12-15 16 22 12 7-1 7-5 3-5-7-11 11-15 7-16 15-1 10-16-21-1-5 7-5-9-6zM612 1060l3 1 0 10-7 23-15 22-9 5-5-14-11-15 10 0 2-7 15-6 0-7 8-2 7 3zM581 1226l1 7-13 10-3 17-8 4 0 11-20-4-11 2-13-11-13-21 2-8 13-10-1-6 13-4 17 15 9-15 1 5 14 8zM220 924l-6 19-15-1 1-6-4-2 7-24 8-8zM133 952l8-5 1-17 12-13 8-29 12-7 0 7 10-5 6 9 18-3 2 4-2 2 4 5-4 8-5 2-7 24 4 2-1 6 15 0 6 12-3 4-7 0-3 7-18-12-19-3-6 7-1 7-21 1zM640 1012l-2 10-12-7-9-1 2-7-9 4 3-8-8-5-7 5-1-4 5-16 10 0 0-6 7 0-1-5 9-4 2-11 20 6zM87 630l15-7 3-8 7-3 12 0 24 15 12-7 5 2 7 8 0 18 12 2-16 12 4 14-3 11-4 4-20 4-9-8-6 6-22-20-5-19-12-12zM469 79l1-14 6-5 2 5-3 9 5 9 6-1-1 8 6 1 5-7 21 14 3-2 1 8 4-3 13 15-5 9-18-6-20 2-5-14-15-15zM494 117l-23 4 0 4-6-5-12-2-31-27 19-11 9 2 5-10 9-1 11 21 15 15zM431 510l-8-5 9-4-5-7 6-9 8-1 11 7 1 22-19 4-2-3-5 0zM461 598l-11-3 3-12 5-2 25 9 10-6 5 13-14 13-1-8-11 2-1-5zM297 428l-6-4-16 9-3-9-10-3-6-8-1-7 3-7 14-1-9-19 9-14 3 3 19-7 9 15 21 0-6 17 1 17-16 11 6 4-9-1zM494 208l24-19 11 2-3 3 4 0-3 4 4 3 20 4 4 5 7 1 4-7 1 12-15 2 2-6-4 1-24 13-27-9zM404 196l17 22 6 19-6 19-10 14-19-12-4-8 5-4 8-24 3-18-3-10zM342 1087l1 10-17 12 6 29-18 4-7 7-6 0-8-7-8 1 0-16-9 4-8 0-10-6-14 4 1-7 8-6-1-9 12-7 6 0-1-12-7-11 6-17-4-3-8 5-10-3 1 6-3-2 0-11 8 0 5-7 30 1 0 6 8-9 20-2-5 10-3 0 0 12 30 5 2 6-3 3zM342 635l3-1-3-10 12-4 6 1 1 3 6-8 2 2 12-5-1 19-10 9-23 4zM451 807l-1-10-20-14-6-15 5-12 8-5 14 3 7-6 4 5 9-27 13 8 8 20-2 20 15 28-15 7-13-5zM262 542l-3-2 26-12 1-8 2 4 9-5 22-35 0-10 5 1 6 7 5 0 4 37-12 24-15 16-11-11-2 4-15-3-11 5zM431 510l-4 4 15 4 12-5 16 4 7-5 3 9-16 33-22 12-6 1-7-5-4-11 2 0-4-4-9 3-5-6 4-3-4-14 4-3-4-4 5-1-6-5zM491 519l5-8 12-4 2 7 27-1 10 6-4 11-5-2-7 14-31-9zM549 732l2-6 24-11 8 0 9 12 4 21-8 15-2 20-6 6-5 0-1-25zM544 670l5 0 8 31 13 17-19 8-3 7-11 2-3-6 4-22-4-3 5-14-2-6 8-1zM629 1171l-5 6-4 1 0 5-3-2-4 5-18 36-22 4-18-8-4-19 11-20 14-9 13-3 28-18zM460 1196l4 3 3 16 23 17 8-1 6 16 20 24-17 12 0 9-12 8-23-8-5 13-6-7 5-9-10-5-5 2-6-9-2-9 5-4-6-34 4-4-2-12 12-7zM226 850l-5-11-5 2-7-5-5 5-15 0-4-9-7 6-2-6 4-5-6-7 1-10-5-3 1-4-4 0 0-5 10-1 8-10 6 6 8-6 8 4 7-2 7 10-3 19 6 15 9 5-3 3 6 4-4 8zM473 687l14 2 2 9 9 4-3 11 2 15-13 6-12-6-7-14 4-12-4-2zM535 619l-26 12-27-4 2-17 14-11 35 6zM335 346l0-9-9-8-2-12-9-8-2-19 9-6 9-14 14 6 5 6 15-5 9 29-1 8 8 7-10 24-6-3-16 8zM520 680l8-5 6-19 10 14 1 13-8 1 2 6-5 14 4 5-2 4-8 3-6-13 0-11-5-1zM482 628l-11 4-12-9 2-25 10 1 1 5 11-2zM532 813l3 4-10 1 5 8-3 3-25 6-8-7-5-18 29-13zM167 397l17-7 12 4 2-10 6 2 8-3 4 1 0 6 8 3 0 7-13 11 2 12-16 15-20-17-6 1-6-13zM507 951l-6-2-7 5 0 5-24 24-13-5-14-27-9-8 22-19 41 17zM163 1009l-17-5-12-9 4-1-7-19 8-9 24-2 1-7 6-7 19 3 3 5 10 2 12 13 7-4 4 2-9 16-7-6-3-7-12 15-16 7zM579 1090l-20-37 3-16 8-10 11 5 7 17 9-2-1 3 7-1 5 5 6-1-4 20-7-3-8 2 0 7-15 6zM402 600l-2-2-7 5-3 9-9-1 3-15-3 0-1-8 7-3 1-6 5 8 10 3zM356 21l3 27 11 10 33 4 6 3 2 10 8 0 10 8 7-2-11 10-7-1-4 4-1 19-9 5-5 10-1 21 20 27-9 3 4 5-9 12-31-1-14-17-10-23-12-6-24 10-22 3-5 6-12-2-13-11 0-27 6-12-4-7 2-5 11-6 1-15 14-7-6-15 18-5 17 1 10-6 2-18 6 0-1-5 6-9zM561 1043l-2 10 14 23 5 16-10 0-1-4-6 6-13-8-5 2-12-14 4-19 16-29 3 16zM364 438l5-7 7-2-4 5 6 9 17-2 10 16 13-2 4 9-7 4-21-7-8 2-1-6-6 4zM349 947l-4-3-20 11-12-5-7-8-14 18-5-5-1-33 17-17 10 14 9-6 16 12 14-5 12 11-13 8zM264 830l-4-5-4 2-20 20-6-6 3-3-9-5-6-15 3-19-11-13-1-23-7-1 5-13 16-13 6 3 2 10 11 6 18 22 15 12 7 21-6 0-3 11zM471 632l11-4 27 3 19-6 3 31-22-2-10 6 1 8-10 0-5-4-12 0-1 3-3-2zM450 1038l2 7 4-4 14 14 1 9 7-1 4-6 6 9 2-7 19 19-9 8 4 12-17 1-27 25 2-17-7 1-23-18 6-13 8-2-4-12 6-2-2-7zM622 875l5-2-6 16 9 31-9 2-5-10-6 2 8-15-1-15zM642 669l-19-8 14-8 4 4 5-3 5 2 22-17 6 4 0 17-12 1-6 7-3 14 4 9-10-5-5 3 0-16zM439 310l24 11-6 5 5 20-2 13-36-11-17-10 9-17 19-13zM505 1038l-18-29 2-5 13-5 14-14 16 8 12 0 6 22 4 0-3 11-28 0zM651 938l4 14-3 11-16-2-7-4 1-3-12 2-8-17-5 1-5-11-16-10 0-7 11 6 6-6 11 3 4-3 5 10 9-2 6 11zM371 345l2 7 6-1 1 5 20 15 22 12 3 8-9-1-8 12-5-3 1-9-14-4-14 2-7-5-19 8-20-7-6-8 11-30 14 4 16-8zM600 726l-8 1-9-12-7-3 3-5 9-3 5-19 22 0 1 14 7 4-2 6-7 7-1 9zM491 856l6 5-6 4-34-1-9 8-12 2-7-6-21-6 21-21 3-12 11-11 3-7 19-7 10 1-2 23 4 16zM182 1057l-1-18 39-32 8 6 11-4 10 9 10-5-3 8 3 0-5 7 5 14-7 10-7-2-7-9-3 3-7-1-6 6 1 6-13 0 0 3-12 0-5 3zM458 561l23-41 4 4 6-5 9 14 23 6-23 11 1 3-4 6-9 2-1 7-8 1-2 4-7-2zM226 628l15-12 28 3 4-3 29 9 13 8-1 13 8 27-23-1-12 8-9 14-36-35-15-7zM189 267l0-5 6-4 0-14 12-10 6-17 32-24 14 35 2 17 8 9 9 1 27 29-21 3-18-7-3 4-18 4 0 21-3 2-12-12-10 2-8-6-7 1zM196 162l-2-6 23 1 20-12 25 7 3 14-10 6 5 21-15-3-7 10-25 17-19-17-8-2 6-3-4-5 2-4 12 0 2-9 3-1zM434 291l9 8-4 11-4-2-19 13-10 14 0 6-14 12-11 3-2-5-6 1-2-7 10-24-8-7 1-8-9-29 15-19 9-4 12 7 23 17 3 2-4 3zM535 619l4 0 20-30 6 1 0-8 13-7 6 3 13 23 19 3 3 18-7 10 0 7-29 1-2 5-8-6-5 3-7-4-9 0 1-4-14-1zM159 317l-1-11 4-7-6-10 1-10-9-11-19-5 8-13 9-5 14 5 20 15 9 2 16 25-2 18 3 11-14-4-23 7-8-3zM410 190l30 34 3 17 22 18 6 10-17 9-16-1-4 14-11-8 4-3-3-2-13-8 10-14 6-19-6-19-16-17-1-5zM373 1106l2-4 5 1 1 12-10-5zM417 481l-2 4-8 0-2 11-19 0-11-5-7 3-9-7-9 4-13-9-7 0 5-6-1-8-6-2 3-5-6-1 4-7-6-2 3-3 8 1 24-12 6 1 11 14 3 9 7-4 1 6 23 1zM649 740l-7-8 5-20 10 2 1 11-10 9 5 6zM191 496l-10 17-1 11-5 1-1 8-14 14-1 14-12-12-4 1-4-7 2-9-7-1 0-15-5-8-4 1-2-7 5-16-8-4 0-8 9 1 3-8 13 8 46-29 9 4-9 24zM379 1033l6-14-11-9 17-15 39 2 18 18-7 11-42 20-10-11-4 4zM388 751l4 7 4 0 1 6 10 7-9 2 1 4-5 6 1 5-14 11-5-3-2-13 7-3-5-6 3-6-3-2zM411 421l-6-3 3-6 8-1-7-11 7-10 13 1 12 14 0 7-4 2-1 7-4 5-14-3-5 7zM322 673l-8-27 1-13 12-1 7 4 6-2 7 11 9-1 14 25-1 6-13 0-21 17zM112 590l8-18 9 10 12 1 9-5 1 3 2-3 3 2 3-9 5-1 10 11-8 29 9 8-9 7-6-5-12 7-24-15-24-1 3-12zM325 781l-8-10-13 2-7-11 1-8 20-6 9 6-3-13 11 2 13-22 6-1 4 4-1 3 13 2 8-4 15 10-8 10 3 6-12 15 3 2-3 6 5 6-7 3 4 10-6 19-17-4-2-13 4 1 1-5-15-2zM530 964l-6 17 2 8-10-4-14 14-13 5-7 10-3-2-11 8-9-1-12 4 8-29 27-22 16-21 4-2 23 8zM424 768l6 15 20 14 1 10-18 21-21-14-18-31 5-6-1-4 9-2-2-3zM235 952l-10 8-7 11-4 2-7-8 3-7 7 0 3-4-7-14 6-8 1-8 7-1-2-4 12 5 7 11-1 12zM512 1147l-6 5-23-9-1 8 14 1-8 11 4 5-2 5-6-1-4-11-13-8-7 1-1 8-3-2-6 5-8-4 6-20 11-15 28-27 17-1-4-12 11-10 12 6-1-8 8-1 5 10 26 10 1 7-14 20-14 2-14-6-2 8-16 2 9 4-2 10zM399 1046l-2 14 4 6-8 16 1-5-32-19 5-2-1-4 6-3 7-16 6 6 4-4zM180 524l1-11 10-17 7-2 17 14 6 1 0 9-5 0-1 9-14 8-5-5 0-5-10 13zM214 21l20-6 20 20 13-6 4 11 9 10 11 26-14 7-1 15-10 4-3 7-25-18-20-7-11-17 7-10 18-3 1-8-16-16zM167 397l3-13-6-10-4-22 9-3 7-10 9-4 0-5 8-9 5-2 8 2 11 24 1 34-3 6-17-1-2 10-12-4zM332 1138l-6-29 17-12-1-10 17-5 3-16 10-4 13 12 9 3-2 16-25 17 3 7-3 16-14-1-16 8zM155 93l8-3 11 2 29 50 18 14-22 2-21-24-9 4-12-3-1-20 6-4zM174 881l-5-11-8-6 2-8-2-3 6-7 16-10 2-4 4 9 15 0 5-5 7 5 5-2 5 11-5 5 0 11-9 1 3 4-9 8 6 5-2 8-2-3-19 3-5-9-10 5zM241 567l8-2 15 20 6 15-2 10 5 6-2 2-31-2-14 12-23-14-2-5-3 5-1-17 16-5-3-10zM685 1220l-11 17-3-6-15-7 16-12 3 9zM505 855l-14 1-14-12-4-16 2-23 14 3 5 20 8 7 9-1 3 10zM613 725l6 23 5 2 12-5 3 5-2 7 9 2-1 8 5 3-5 17-3-4-10 3 1 4-4 0-1 4-10-5-5-19 5-2 0-10-4-1-8-23-6-6zM323 451l-4-7-24-5 4-15 10 1-6-4 16-10-1-7 14 12 10 17 6 3 0 5-12 7-10 0zM593 1221l33 8 23 1 8-5 14 6 3 6-17 21-7-11-8 3-4-4-13-2zM592 727l8-1 14 31 4 1 0 10-5 2 2 11 4 3-1 5 9 5-12 17-8-6-3-13-15-9-1-20 8-17zM278 255l10-8-6-4 6-12 16 9 8 0 20-13 0-12 12 0 11 6-12 37-17 16-4 10-9 6-25-21zM417 383l22-22-2-10 23 8 2 8 19 21 1 6-5 1 1 5-5-2 0 5-9 4-13-12-5-1-7 10-17-21zM417 383l-37-27 14-5 13-13 30 13 2 10zM648 971l7-19-7-31 13 0 16 8 3 21-11 0 5 18-10 1 1 7-6 4-3 1-1-7zM278 694l-3 13-9 11-2 12-11 18 0 17-22-16-3-10-5-3-8 4-4-23-20-22 10-6 31-6-5-11 14-14zM257 946l-6 0-9 12-7-6 8-5 0-12 13-7-2 4 6 6zM622 875l-5 9 1 15-8 15-9-2-6 6-7-6-7 1-5-8 5-9 6-2 0-7-5-10 7 4 21-12zM284 967l-23-11-4-10 3-8-6-6 3-4-13 7-7-11 24-12 10 4 9-13 11-4 0-8 14-2 0 13-20 21 2 32 5 5zM598 1003l-8 0 4-5-3-6-4 1-3-17-5-1 1-6-12-3 5-27 11-20 16 10 5 11 5-1 8 17 12-2-3 14-9 4 1 5-7 0 0 6-10 0-1 10-4 2zM514 844l23-6 8 26-12 0-8 5-9-3 0-8-12-3zM472 424l-6-18 7-3 0-5 5 2-1-5 5-1-2-10 11 1 9-7-2-11 12-3-4-7 6-15 13-2 21 6 3 6 9 3 7 15-1 11-24 26 9 30-17 0-7-10-9 1-1-8-16-2-19 10zM615 685l-21 0 2-37-3 0 9-10 10 1 6 17 11 9zM416 731l-4-6-6 4-13-9 3-22-6-8-5-2 3-16 5 0 3-4 23 0-4 5 0 15 5 17 9 16-5 9zM158 92l5-6-4-10 8-14 20 8 16-6 15 20 20 7 27 20 2 5-6 12 1 24-25-7-15 11-4-1-15-13-28-49zM487 689l-14-2-5-4-2-19 6 3 1-3 12 0 7 4 2 7-7 5zM61 497l20-41 6-5 8 6 9-4 1-15 6-3 9 3 2 9 14 4-4 15-12 10-1 9-6 7-6 3-3 9-15 9-13-6-3 5-5 0zM480 428l-5 18-9 10-31-3-10 5-13-3-7 2-2-3 9-16 12 5 11-8 3 3 30-8 6-7zM299 759l-2 3 7 11 13-2 8 10-5 1-3 11-8 7 2 9 4 0-28 22-20 1-2-6 7-3 4-13 5-2-7-22-14-9-7-12 35 1zM277 479l-5 6-20 9 1 10-11 9-7-1 1-5-12 2-2 5-2-6-5 0-17-14-7 2 0-20 7-21 6-6 11 6 12-6 30 21 11-6 7 2zM463 321l-24-11 4-7-2-6 6 0 1 3 8-5 13 2-2-13 6-2 6 4 9 0 6-4 3 11-6 12 4 17-9 3zM509 1078l-19-19-2 7-6-9-4 6-7 1-1-9-14-14-4 4-3-4 5-14-7-4 12-4 9 1 19-11 19 30-3 6zM211 902l-3-7 4-11-6-5 9-8-3-4 9-1 0-11 5-5 8 8 7-5 7 3 4 6 0 12 8 7 14-2 12 23-6 1-10 14-9-5-24 12-12-5 2 4-6 2zM166 699l-3-6 6-6 3-11-4-14 18-13 20 14 7-3 12 3 2-8 12 4-12 13 5 11-31 6-10 6-11 12-1 9-8-7zM370 1062l-8 4-3 16-17 5-6-10 3-3-2-6-30-5 0-12 3 0 6-9-20 1-2-12 6-7 4-14 6-4-3-10 3-11 10-10 11 1 7-6 0-9-6-8 13-9 26 8-9 6 9 18 4 4 3-3 0 9 10 10-14 14 11 9-9 24-10 9 1 4-5 2zM454 1195l-16 5-9-8-4-18-16-27-5-2-12 8-17 0-6-10-13-9 11-1 3-15-2-9 5-3-2 4 6 6 4-2-3-9 14-12 9-27 3 7 8-1 23-12 8 1 3 14-8 2-6 13 23 18 7-1-2 17-12 17-9 36 10 7zM205 296l7-1 8 6 10-2 12 12 3-2-1-10 7 14 7 3 9 24-4 15 8 11-8 18 9 14-14 1-3 7-15-10-24-6 3-13-2-31-14-36zM348 488l3 13 13 17 0 23-7 11-23 13 0-7 6-7 3-13-9-10 5-9-4-36zM433 828l-4 13-12 14-14-6-4-19-5-4-2-15-11-12 6-2 8-13 17 30zM642 731l6 12-10 4-7-2-8 5-5-5-4-16 1-3zM275 707l3-13 9-14 12-8 23 1 9 9 12 34 5 5-1 6-14 17-37-19-11 1-2-10-5-1zM595 1222l18-36 4-5 3 2 0-5 4-1 5-6 17 22 28 10 12 11-1 6-7 2-6-10-12 6-11 12zM482 1178l1-5 8-1-3-9 8-11-14-1 1-8 23 9 6-5 6 2 7-3 3 10-38 21 0 7zM216 1071l-20-9 0-3 27-4-1-6 6-6 7 1 4-3 6 9-3 15-15 2-4 8zM347 621l-6 5 4 9-11 1-7-4-10 2-42-17-7-7 0-16-11-20 4-10 57 20 18 22 12-1-8 5zM198 319l-26 28-12 5 4 22 6 10-5 23-28 10 2-65-4-6 3-9 19-7 2-13 2 4 8 3zM505 1038l18-12 28 0-16 29-4 19-9 0 1 8-10-3-6-12zM576 295l-5 17-4 3-8-7-4 0-5-8 5-16-11-25 15-1 35 17zM241 658l-14-3-2 8-12-3-7 3-8-3-9-12-6 3-11-3 0-18-6-6 9-6-9-8 5-22 20 17 4-3 3 12 3-5 2 5 23 14 1 24zM555 871l-10-1-7-31-22 6-5-2 0-9 16-5 24 15-1-9 11 7 5-3 4 8 8 3-1-2 22-13-11 30-10 2-2 4zM262 542l11 12 11-5 15 3 2-4 11 11 15-16 7-15 9 10-3 13-6 7 0 7-7 9 3 7-9 6-65-23 2-19zM457 559l-8 36-3 1 0-7-15 5-17-5-6 0-1 3-8-2-11-11-1 6-7 2 3-6-3-7 4-6-2-9 16 1 6-10 15 0 4-3 4 4-2 0 3 11 8 5zM120 438l-9-3-6 3-1 15-9 4-8-6-14 16-5-21-10 1-9 6-12-8-9-19-8-1-1-8-12-15 9-7 8 4 22-3 13-15 10 3 6 10 7-2 0-12 6-3 1-10-4-4 4-6-2-3-5 2 15-7 9-13 13-1 20 17-3 22 3 12-1 43-15-1zM470 983l-15 11-7 21-18-18-43-1-9-10 0-9-5 2-11-21 11-8 11 6 24 1 7-3 2-9 10 3 11-2 19 32zM533 813l-11-8-4-7-17 3-11-27 2-20 6-4 5 4 11-7 12 17 3 11-4 11 8 17zM490 1184l2 23 25 13-16 17-3-6-8 1-23-17-6-19 2-6 4 2 0-4 5-1-1-4 7 3 4-8zM607 1297l-24 13-12-13-13-23 0-10 8-4 1-13 11-12 3 0 2 18-8 2 5 2 6 15 11 9 3 13 8 0zM206 533l28 27 5 1 2 6-31 15 3 10-16 5-6 8-20-17 3-7-8-6 2-3-9-1 0-18 10-19 5-1 1-8 5-1 6 14 10-13 4 9zM434 943l-30-5-4-5 2-3-6-2 4-12-9-9 16-14-5-8-2-15 8-8 21 6 12 9 21-1 29 16 5 6-19 12-10 1-1 16-10-3zM773 779l13-3 7 6-38 59 2 13-5 27-17-7 4-15-4-17-16-4 5-19-7-5-9 1-10-5 0-6-4-3 11-10 31-2 25-10zM320 405l-2-12 6-17 10 11 16 4 20-8 6 5 9-3 19 5-1 9 6 2 7 10-7-1-4 8 6 3-3 2-31 2-13 13-16 3-2-8-4 0-10-17-7-3zM422 91l25 21 6 22 17 6-12 12 3 20-7-3-15 9-17 0-24-29 1-21 5-10 9-5 1-19zM702 909l20 8 5 5-16 23 18 23-20 6-8 21-7-16-12-12-8 1-5-18 11 0-3-21-16-8 6-1-1-17 6-1 3 6 28 10zM603 1049l7-5-3-17-4-1 2-11 14-8-2 7 9 1 11 9-16 15-6 22-3-1 0-9-4 3zM288 231l3-22 18-2 23 8 0 12-20 13-8 0zM157 789l-1-14-10-9 8-3-10-9 8-2-1-9 3-4 7-4 5 5 28 11 14-13 7 2-9 10-4 12 7 1 3 26-5 2-8-4-8 6-6-6-8 10-10 1 1 9-11-11zM551 476l1 29 6 16-5 15-10-6 4-11-10-6-27 1-2-7-13 3 6-7 7 0 1-5-6-4 3-6-1-9 30 2zM364 521l-3-10-10-10 9-6 16 3 11 12 12 5 13 0 2 4-5 1 4 4-5 8 5 4-4 9 5 5-10 0-8 11-4-3-10 1 2-6-9-23-10-4zM683 850l-12-13 1-23 8-1 14-12 4 3 0 6 10 5 9-1 7 5-5 19 16 4 4 23-4 9-25-8-21-2 2-5zM471 269l-6-10-22-18-3-17-30-34 3-6 8 2 3-3 10 16 12 7 11-1 18 6 2-9 17 6 2 6 6 3-4 27 4 13-4 8-13 7zM572 1028l-9 8-2 7-6 0-4-17 3-11 9-3 2-8 6 1-1-7 7 1 3-5 3 3 2-4 6-1 3 6-5 4 6 2 1 6-5 2 1 3-8 10zM349 947l2-8 13-8-10-6 0-8 22-6 6 3 9-7 9 8-4 13 6 2-2 3 2 5 36 8-11 2-10-3-2 9-7 3-24-1-11-6zM813 1078l4 5 10 2-4 16-29-15-50 12 7-9 1-9-4-4-4-16-8-7-3-12 4-28 44 28 16 18 6 13zM809 866l11 11-18 20-6 21-7 2-21-10-12-1-4-28 40-14zM653 1077l6 1 6 9 0 27 9 10-4 20-31-19-18 2-3-4 20-40zM729 968l4-1 10 11 10-2 1 21-8 2-10 14-1 18-27 10 5-28-10-7-2-11 8-21zM793 782l10 3-5 30 11 11 0 40-17 1-40 14 5-27-2-13zM670 1009l-10 6-9-5-11 2 8-41 7 3 1 7 9-5-1-7 18-2 12 12 9 27-5 3zM887 900l4 20-26-9-5 14-9-2 6 17-4 1-21 0-26-14-6 4-3-13 5-21 13-17 31-12 31 2 8 16zM685 647l-6 4 0-8-6-4-22 17-5-2-5 3-4-4-14 8-10-18 47-27 5 10 21 5zM843 784l13-6 9 3 10-6 14 2 4 17-11 54-9 0-14-6 1-34-20-15zM926 775l10-3-13 46-33-12 0 15-1-16 4-11-4-17zM744 1098l-26-1-12 7-4-22 6-41 27-10-2 10 3 12 8 7 4 16 4 3-1 10zM805 785l20-8 12 8 6-1-3 9 20 15-3 27 20 35-31-2-26 9-11-11 0-40-11-11zM785 1026l-5 1 1 14-44-28 9-14 8-2-1-21 22 1 22 12 1 10-7 1 1 20-6 2zM679 651l16-10 4 36-9 11 1 10-19-3-13-9 2-18 6-7 12-1zM928 846l-6 27 7 9-1 6-41 12-3-18-19-30 0-8 17 4 1-16 5-2 0-8 2-1 9 27 19 0 12-6zM717 703l0 3 9 4 10 16 0 14 4 2-2 17 3 4-5 14 6 10-38 5-10 9-15-30 15-12 0-7 8-3 7-12 16 1 1-9-12-14zM891 920l-3 14 3 4-24 20-9 24-21 15-19-4-6-26 7-7 6-23 15 6 17-3-6-17 9 2 5-14zM939 952l4 17-15 8-6 9-5 2-2-3-8 8-2-1-20 20-32-14-16-1 23-18 7-21 21-19 4-1 21 20 6-4 6 4 9-8zM873 1073l-8 13-8-6-23-5-4-5-17 8-10-6-6-13-16-15-1-17 12-2-3 5 9 4 26-4 2-7-7-18-10-9-11 3-1-10-5-2 6-7 18 5 2 8 35 5 31 14 5 11-20 9-5 16 4 8-5 6zM753 976l-10 2-10-11-3 3-19-25 16-23 29-13 12 1 21 10 7-2 4 13 6-4 19 10-6 23-7 7 4 18-18-5-6 7-17-10zM665 1087l-6-9-8-2 0-16-4 0 0-3 2 2 16-6-4-8 8 1 1-38 28 1 5-3 10 7-9 45-26 4-2 7-9 5zM678 744l13 3 2 3 5-2 1-9 10-2-7 12-8 3 0 7-13 11zM678 744l-2-1 4-10 11-18 10 2 12-3 13 15-1 9-26 1-1 10-5 1-2-3zM653 1077l-15 6-12-18-11-4 1-11 13-9 4 6-2 7 20 6-1 12zM706 1104l-9 0-1 5-16 5-7 7-7-5 1-42 9-5 2-7 26-4-2 27zM638 1022l2-10 11-2 9 5 10-6-1 37-8-1 4 8-16 6-12-2-6-3 2-7-4-6-13 9 5-11 13-9zM618 1123l-36 3 26-32 7-33 11 4 13 20-9 9 1 6zM798 999l11-3 10 9 7 18-2 7-26 4-9-4 3-5-7 1 1-4 6-2-1-20zM994 947l-1 3 1-4-6-6 1 5-4-1-4 6-13-12-13 13-7-5-2 6-12-2-9 8-6-4-6 4-25-24 4-18-5-16 35-12 40 2 15 11-2 6 7 12 17 7 1 11z"/>
+        <path class="arr" d="M650.5 846.5l-3.5 0 0.5 1.5-7 0.5-1.5-2.5-3-2-10 1-4-2-1-4.5 3.5-1 0.5 0.5 8-3.5 12-1 0.5-1.5 5 3.5zM640.5 848.5l7-0.5-0.5-1.5 3.5 0 0 5.5-1.5 9-18.5 33.5-3 14-1 0-1-6-2-2-1-2.5-1-8.5 0.5-7.5 3-6.5 7-6.5 2-3.5 1-4 5-8zM714.5 867l-2 10-5 12-13.5-5.5-45-22.5 1.5-10.5 33 0 2 3.5 3 1.5-1 2.5 3 1-1 5 19.5 1.5zM628 809.5l3.5 3.5-1 1 1.5 1 1 3 6 2.5 1-0.5 1.5 0-0.5 1.5 2 0.5 5.5-1.5 3.5 5 2 1-3.5 9-5-3.5-0.5 1.5-12 1-8 3.5-0.5-0.5-3.5 1-4-7 0-3 7-14zM582.5 876l-6-6 1.5-3 5-2 4.5 0 0-3.5 3.5-3.5 1.5-8.5 14.5 1 6 5.5 7.5 2-2-2-1-6.5 2.5-1 1 1.5 0 2 0.5-0.5 0-1.5 2-0.5 0-2.5 5.5 1.5-0.5-3.5 4-1 4 0 2.5 2 1.5 2.5-0.5 5-8 15.5-5 4.5-4-1-1.5 2.5-1-1-1.5 1.5-1.5-1 1-1.5-9-4-8.5 4-12 8-5-5.5zM683.5 850.5l-33 0 0-15.5 6-13 6.5-6 4.5-2 5 0-1.5 22.5 2.5 1 2.5 4 5.5 4.5zM661 920.5l-13 0.5 0.5 8 3 9-3.5 0.5-14.5-10-4-9.5-2-10.5 3-14 18.5-33.5 23.5 11.5-3 12.5-2.5 2.5-5.5 2-1.5 2-1.5 18.5zM702 909l0.5 9-1.5-1.5-5.5-0.5-20.5-8-2.5-6-7 1.5 1 17-5.5 0-2.5-10.5 1.5-18.5 1.5-2 5.5-2 2.5-2.5 3-12.5 21.5 11 13.5 5.5-5.5 14.5zM594.5 809.5l1-1 0.5 1 0.5-2 3.5 2.5 4-0.5-0.5-2.5 5 0 1-1 3 3 3 1.5 1.5-4.5 5.5-4 2.5-6 3.5-1.5 0.5-4.5 4 0.5-1-4.5 4.5 0.5 5.5-4 0 2 2.5 2 3-6 1.5 6 3.5 1.5-5 8-4.5 2.5-4 1-9 7.5-5 6-6.5 12-1.5 6.5 3.5 5 1.5 6.5 4 2 2.5 0 0.5 2.5 0 1-5.5-1.5-0.5 2.5-1.5 0.5 0 1.5-0.5 0.5 0-2-1-1.5-2.5 1 1 6.5 2 2-7.5-2-6-5.5-14.5-1 0.5-2 4-4 0.5-5 4.5-7-0.5-2.5-3-3-1-3.5 1-8-7 1 0-1.5-1.5-0.5-0.5-1z"/>
+        <g id="pins"></g>
+      </svg>
+      <div class="legend" id="mapLegend" style="padding:0 12px 10px"></div>
+    </div>
+    <aside class="map-card" id="mapCard" aria-live="polite"></aside>
+  </section>
+
+  <section class="sec" style="display:flex;flex-direction:column;gap:10px">
+    <div class="filters">
+      <input id="q" type="search" placeholder="Rechercher une CPTS, une ville, un contact…" aria-label="Rechercher">
+      <select id="zone" aria-label="Zone"></select>
+      <select id="sort" aria-label="Trier">
+        <option value="zone">Tri : par zone</option>
+        <option value="recent">Création : plus récentes d'abord</option>
+        <option value="ancien">Création : plus anciennes d'abord</option>
+      </select>
+    </div>
+    <div class="chips" id="statusChips" role="group" aria-label="Filtrer par statut"></div>
+  </section>
+
+  <section class="list" id="list" aria-live="polite">
+    <div class="empty">Chargement du CRM…</div>
+  </section>
 </div>
 <div class="toast" id="toast" hidden></div>
 
-<script id="base" type="application/json">[{"id": "crm", "title": "CRM prospection", "url": "https://claude.ai/artifact/BFJKnBAirmEqTeD2aAXHYS", "cat": "Mes outils", "note": "Fiches, appels, relances du jour, emails, carte", "pinned": true, "main": true, "order": 1}, {"id": "allo", "title": "Allo", "url": "https://web.withallo.com/", "cat": "Appels et emails", "note": "Téléphone, historique et résumés d'appels", "pinned": true, "order": 2}, {"id": "gmail", "title": "Gmail", "url": "https://mail.google.com/", "cat": "Appels et emails", "note": "Boîte mail", "pinned": true, "order": 3}, {"id": "pitchbase", "title": "PitchBase", "url": "https://pitchbase.app/app#history", "cat": "Entraînement", "note": "Simulations d'appels et scores", "pinned": true, "order": 4}, {"id": "allo-resumes", "title": "Allo · résumés d'appels", "url": "https://web.withallo.com/?view=summaries", "cat": "Appels et emails", "note": "Tous les résumés générés par Allo", "order": 10}, {"id": "calendly", "title": "Calendly · démo 15 minutes", "url": "https://calendly.com/alexandre-nosho/15-minutes-meeting", "cat": "Appels et emails", "note": "Lien de prise de rendez-vous", "order": 11}, {"id": "pipeline", "title": "Pipeline CRO (Drive)", "url": "https://drive.google.com/file/d/1rVnuwFMX1z4qENpEnRNrhVBT76pmUqp5/view", "cat": "Mes outils", "note": "Classeur du pipeline", "order": 12}, {"id": "espace-claude", "title": "Espace prospection (version Claude)", "url": "https://claude.ai/artifact/V9zUnBFcHBmVCzUvdaEbni", "cat": "Mes outils", "note": "Même page, hébergée sur Claude", "order": 13}, {"id": "cptshero", "title": "Annuaire des CPTS Auvergne-Rhône-Alpes", "url": "https://www.cptshero.fr/annuaire-cpts/region/auvergne-rhone-alpes", "cat": "Sources de prospects", "note": "CPTShero, liste par département", "order": 20}, {"id": "coordo", "title": "CPTS du Rhône sur Coordo", "url": "https://www.coordo.fr/cpts/departement/69-rhone/", "cat": "Sources de prospects", "note": "Fiches avec bureau et contacts", "order": 21}, {"id": "urps-mk", "title": "URPS kinés ARA · fiches CPTS", "url": "https://urps-mk-ara.org/cpts/cpts-lyon-3/", "cat": "Sources de prospects", "note": "Numéros et coordinateurs à jour (changer la fin de l'adresse selon la CPTS)", "order": 22}, {"id": "annuaire-entreprises", "title": "Annuaire des entreprises", "url": "https://annuaire-entreprises.data.gouv.fr/", "cat": "Sources de prospects", "note": "SIREN, date de création, dirigeants", "order": 23}, {"id": "linkedin", "title": "LinkedIn", "url": "https://www.linkedin.com/", "cat": "Sources de prospects", "note": "Vérifier qui est en poste", "order": 24}, {"id": "nosho-site", "title": "Site Nosho", "url": "https://www.nosho.ai/en", "cat": "Nosho", "note": "", "order": 30}, {"id": "nosho-simulateur", "title": "Simulateur de rentabilité", "url": "https://www.nosho.ai/en/simulateur", "cat": "Nosho", "note": "", "order": 31}, {"id": "allo-mcp", "title": "Connecteur Allo pour Claude", "url": "https://www.withallo.com/mcp", "cat": "Mes outils", "note": "Pour une synchro Allo directe plus tard", "order": 40}]</script>
 <script>
-const BASE=JSON.parse(document.getElementById("base").textContent);
-const KEY="espace-prospection-local-v1";
+const STATUSES=[
+  {id:"a_appeler",label:"À appeler",c:"--s-todo"},
+  {id:"pas_reponse",label:"Pas de réponse",c:"--s-noans"},
+  {id:"message",label:"Message laissé",c:"--s-msg"},
+  {id:"rappeler",label:"À rappeler",c:"--s-back"},
+  {id:"rdv",label:"RDV calé",c:"--s-rdv"},
+  {id:"pas_interesse",label:"Pas intéressé",c:"--s-no"},
+  {id:"mauvais_num",label:"Mauvais numéro",c:"--s-bad"}
+];
+const SMAP=Object.fromEntries(STATUSES.map(s=>[s.id,s]));
+const CLOSED=new Set(["rdv","pas_interesse"]);
+const FIAB={confirme:"Site officiel",annuaire:"Annuaire",fiche2023:"Fiche 2023 · à vérifier",non:"Aucun n° public"};
+const FIAB_C={confirme:"--s-rdv",annuaire:"--s-msg",fiche2023:"--s-noans",non:"--s-no"};
+const COORDO={confirme:"Confirmé 2025-26",a_verifier:"À vérifier",changement:"Changement récent",inconnu:"Coordo inconnu·e"};
+const COORDO_C={confirme:"--s-rdv",a_verifier:"--s-msg",changement:"--s-back",inconnu:"--s-no"};
+const ZONES=["Lyon","Métropole Nord/Est","Métropole Sud/Est","Ouest lyonnais","Rhône hors Métropole","Autres prospects"];
+const TYPES=["CPTS","Cabinet médical","Centre de santé","Maison de santé","Clinique","Hôpital","Centre dentaire","Imagerie","Vétérinaire","Autre"];
+let mcp=null, sampleFn=null, gmailState="unknown";
+const mailUi={}; // id -> {confirm:bool, sending:bool, msg:{kind,text}}
+const TODAY_LABEL=()=>new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+const TONE="";
+
+let rows=[], loaded=false, col=null, canWrite=true;
+const ui={q:"",zone:"all",status:"all",open:null,sort:"zone"};
+try{const s=localStorage.getItem("cpts-sort");if(s==="recent"||s==="ancien")ui.sort=s}catch(_){}
+const drafts={}; // id -> {outcome,date,note,notes}
+const pending={}; // per-doc write chain
+
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const dom=u=>{try{return new URL(u).hostname.replace(/^www\./,"")}catch(_){return u}};
-let local={added:[],edited:{},deleted:[]};try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&Array.isArray(s.added))local=s}catch(_){}
-const saveLocal=()=>{try{localStorage.setItem(KEY,JSON.stringify(local))}catch(_){}};
-let links=[], editing=null, confirmDel=null;
-const ORDER=["Mes outils","Appels et emails","Sources de prospects","Entraînement","Nosho"];
-function compute(){links=[...BASE,...local.added].filter(l=>!local.deleted.includes(l.id)).map(l=>({...l,...(local.edited[l.id]||{})}))}
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const fmtDay=s=>{if(!s)return"";const [y,m,d]=s.split("-");return new Date(+y,+m-1,+d).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})};
+const fmtMonth=s=>new Date(s+"T12:00:00").toLocaleDateString("fr-FR",{month:"short",year:"numeric"});
+const fmtAt=s=>new Date(s).toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"})+" "+new Date(s).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+const pill=st=>{const s=SMAP[st]||SMAP.a_appeler;return `<span class="pill"><i class="dot" style="background:var(${s.c})"></i>${s.label}</span>`};
 function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2200)}
-function match(l){const q=$("#q").value.trim().toLowerCase();return !q||[l.title,l.url,l.cat,l.note].join(" ").toLowerCase().includes(q)}
-function render(){
-  compute();
-  const vis=links.filter(match);
-  const pins=vis.filter(l=>l.pinned).sort((a,b)=>(a.order||0)-(b.order||0));
-  $("#pinSec").hidden=!pins.length;
-  $("#pinned").innerHTML=pins.map(l=>`<a class="pin${l.main?" main":""}" href="${esc(l.url)}" target="_blank" rel="noopener"><span class="dom">${esc(dom(l.url))}</span><b>${esc(l.title)}</b>${l.note?`<span class="note">${esc(l.note)}</span>`:""}</a>`).join("");
-  if(!vis.length){$("#groups").innerHTML=`<div class="empty">Aucun lien ne correspond à cette recherche.</div>`;return}
-  const cats=[...new Set(vis.map(l=>l.cat||"Autres"))].sort((a,b)=>{const ia=ORDER.indexOf(a),ib=ORDER.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b)});
-  $("#cats").innerHTML=[...new Set([...ORDER,...links.map(l=>l.cat).filter(Boolean)])].map(c=>`<option value="${esc(c)}">`).join("");
-  $("#groups").innerHTML=cats.map(c=>{
-    const ls=vis.filter(l=>(l.cat||"Autres")===c).sort((a,b)=>(a.order||0)-(b.order||0)||a.title.localeCompare(b.title));
-    return `<section class="group"><h2>${esc(c)} <small>${ls.length}</small></h2><div class="list">${ls.map(l=>`
-      <div class="item"><a href="${esc(l.url)}" target="_blank" rel="noopener"><span class="t">${esc(l.title)}</span><span class="dom">${esc(dom(l.url))}</span>${l.note?`<span class="note">${esc(l.note)}</span>`:""}</a>
-      <div class="acts">${confirmDel===l.id?`<button class="ic" style="color:var(--danger)" data-delok="${esc(l.id)}">Supprimer ?</button><button class="ic" data-delno="1">Non</button>`:
-        `<button class="ic" data-copy="${esc(l.url)}">Copier</button><button class="ic" data-pin="${esc(l.id)}" aria-pressed="${!!l.pinned}">${l.pinned?"Épinglé":"Épingler"}</button><button class="ic" data-edit="${esc(l.id)}">Modifier</button><button class="ic" data-del="${esc(l.id)}">Suppr.</button>`}</div></div>`).join("")}</div></section>`}).join("");
+
+function isDue(r){return r.nextCall && !CLOSED.has(r.status) && r.nextCall<=today()}
+
+// ---- Emploi du temps des relances ----
+const addDays=(s,n)=>{const [y,m,d]=s.split("-").map(Number);const x=new Date(y,m-1,d+n);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")};
+const nextWorkday=s=>{let x=addDays(s,1);for(let i=0;i<3;i++){const wd=new Date(x+"T12:00:00").getDay();if(wd!==0&&wd!==6)break;x=addDays(x,1)}return x};
+const ag={day:today(),start:today()};
+const pending_=r=>r.nextCall&&!CLOSED.has(r.status);
+function dayItems(d){
+  const t=today();
+  return rows.filter(r=>pending_(r)&&(r.nextCall===d||(d===t&&r.nextCall<t)))
+    .sort((a,b)=>(a.nextCall<t?0:1)-(b.nextCall<t?0:1)||String(a.nextTime||"99").localeCompare(String(b.nextTime||"99"))||(a.order||0)-(b.order||0));
 }
-function patch(id,data){const a=local.added.find(x=>x.id===id);if(a)Object.assign(a,data);else local.edited[id]={...(local.edited[id]||{}),...data};saveLocal();render()}
-function openForm(l){editing=l?l.id:null;$("#form").hidden=false;$("#form-title").textContent=l?"Modifier le lien":"Nouveau lien";
-  $("#f-title").value=l?.title||"";$("#f-url").value=l?.url||"";$("#f-cat").value=l?.cat||"";$("#f-note").value=l?.note||"";$("#f-pin").value=l?.pinned?"1":"0";$("#f-msg").textContent="";$("#f-title").focus()}
-$("#form").addEventListener("submit",e=>{e.preventDefault();
-  const title=$("#f-title").value.trim();let url=$("#f-url").value.trim();const msg=$("#f-msg");
-  if(url&&!/^https?:\/\//i.test(url))url="https://"+url;
-  try{new URL(url)}catch(_){msg.textContent="Adresse invalide.";msg.className="msg err";return}
-  if(!title){msg.textContent="Le nom est obligatoire.";msg.className="msg err";return}
-  const data={title,url,cat:$("#f-cat").value.trim()||"Autres",note:$("#f-note").value.trim(),pinned:$("#f-pin").value==="1"};
-  if(editing)patch(editing,data);else{local.added.push({...data,id:"l"+Date.now(),order:Date.now()});saveLocal();render()}
-  $("#form").hidden=true;toast(editing?"Lien modifié":"Lien ajouté");editing=null;
-});
+function lastNote(r){const h=(r.history||[]).slice(-1)[0];if(!h||!h.note)return"";return h.note.length>170?h.note.slice(0,167)+"…":h.note}
+function renderAgenda(){
+  const t=today(), wk=$("#ag-week"), list=$("#ag-list"); if(!wk)return;
+  const days=[...Array(7)].map((_,i)=>addDays(ag.start,i));
+  wk.innerHTML=days.map(d=>{const n=dayItems(d).length, dt=new Date(d+"T12:00:00");
+    return `<button class="ag-day${d===ag.day?" on":""}${d===t?" today":""}" data-agday="${d}" aria-pressed="${d===ag.day}">
+      <span>${dt.toLocaleDateString("fr-FR",{weekday:"short"})}</span><b>${dt.getDate()}</b><em>${n?n+" relance"+(n>1?"s":""):"—"}</em></button>`}).join("");
+  const items=dayItems(ag.day);
+  const dt=new Date(ag.day+"T12:00:00");
+  $("#ag-title").textContent=(ag.day===t?"Aujourd'hui, ":"")+dt.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})+(items.length?` · ${items.length} relance${items.length>1?"s":""}`:"");
+  if(!loaded){list.innerHTML=`<p class="ag-empty">Chargement…</p>`;return}
+  if(!items.length){
+    const next=rows.filter(r=>pending_(r)&&r.nextCall>ag.day).map(r=>r.nextCall).sort()[0];
+    list.innerHTML=`<div class="ag-empty"><strong>Aucune relance prévue ce jour-là.</strong>${next?` <span>Prochaine relance : ${fmtDay(next)} (${dayItems(next).length}).</span> <button class="chip" data-agday="${next}">Voir ce jour</button>`:" <span>Aucune relance planifiée pour la suite.</span>"}</div>`;
+    return;
+  }
+  list.innerHTML=items.map(r=>{
+    const c=r.coordo||{}, tel=c.tel||r.tel, late=r.nextCall<t, s=SMAP[r.status]||SMAP.a_appeler;
+    return `<div class="ag-item${late?" late":""}">
+      <div class="ag-time">${late?`<span class="late-tag">En retard</span><small>${fmtDay(r.nextCall)}</small>`:r.nextTime?`<b>${esc(r.nextTime)}</b>`:`<small>Dans la journée</small>`}</div>
+      <div class="ag-main">
+        <div class="name">${esc(r.name)} ${pill(r.status)}</div>
+        <div class="sub" style="white-space:normal">Demander ${esc(c.nom||"la coordination")}${c.poste?` · ${esc(c.poste)}`:""}</div>
+        ${lastNote(r)?`<div class="ag-note">${esc(lastNote(r))}</div>`:""}
+      </div>
+      <div class="ag-act">
+        <div><span class="phone">${esc(tel)}</span>${tel&&!/non|trouver/i.test(tel)?`<button class="copy" data-copy="${esc(tel)}">Copier</button>`:""}</div>
+        <div class="logrow" style="justify-content:flex-end">
+          <button class="btn ghost" data-postpone="${r.id}" ${canWrite?"":"disabled"} title="Décale la relance au prochain jour ouvré">Reporter</button>
+          <button class="btn" data-openrow="${r.id}">Ouvrir la fiche</button>
+        </div>
+      </div>
+    </div>`}).join("");
+}
+
+function renderSummary(){
+  const n=rows.length||27;
+  const count=id=>rows.filter(r=>(r.status||"a_appeler")===id).length;
+  const called=rows.filter(r=>(r.status||"a_appeler")!=="a_appeler").length;
+  const due=rows.filter(isDue);
+  $("#kpis").innerHTML=[
+    [`${called}<small style="font-size:14px;color:var(--muted);font-weight:500"> / ${n}</small>`,"Prospects contactés"],
+    [count("rdv"),"RDV calés"],
+    [due.length,"Relances dues"],
+    [count("pas_reponse")+count("message"),"En attente de retour"],
+    [count("pas_interesse")+count("mauvais_num"),"Écartées"]
+  ].map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join("");
+  $("#bar").innerHTML=STATUSES.map(s=>{const k=count(s.id);return k?`<i style="width:${k/n*100}%;background:var(${s.c})" title="${s.label} : ${k}"></i>`:""}).join("");
+  $("#legend").innerHTML=STATUSES.map(s=>`<span><i class="dot" style="background:var(${s.c})"></i>${s.label} ${count(s.id)}</span>`).join("");
+  renderAgenda();
+  $("#statusChips").innerHTML=[{id:"all",label:"Toutes",c:null},...STATUSES].map(s=>{
+    const k=s.id==="all"?rows.length:count(s.id);
+    return `<button class="chip" data-status="${s.id}" aria-pressed="${ui.status===s.id}">${s.c?`<i class="dot" style="background:var(${s.c})"></i>`:""}${s.label} <small>${k}</small></button>`}).join("");
+}
+
+function matches(r){
+  if(ui.zone!=="all"&&r.zone!==ui.zone)return false;
+  if(ui.status!=="all"&&(r.status||"a_appeler")!==ui.status)return false;
+  if(ui.q){const h=[r.name,r.territoire,r.contact,r.email,r.adresse,r.coordo?.nom,r.coordo?.poste].join(" ").toLowerCase();if(!h.includes(ui.q.toLowerCase()))return false}
+  return true;
+}
+
+function coordoHTML(c){
+  if(!c)return"";
+  const st=c.statut||"inconnu";
+  return `<div class="coordo">
+    <div class="coordo-h"><span class="eyebrow">Coordination</span><span class="pill"><i class="dot" style="background:var(${COORDO_C[st]})"></i>${COORDO[st]}</span></div>
+    <div class="coordo-name">${esc(c.nom||"Nom inconnu")}</div>
+    <div class="sub" style="white-space:normal">${esc(c.poste)}</div>
+    <dl class="facts" style="margin-top:6px">
+      <dt>Tél.</dt><dd>${c.tel?`<span class="phone">${esc(c.tel)}</span><button class="copy" data-copy="${esc(c.tel)}">Copier</button>`:`<span style="color:var(--muted)">Non trouvé</span>`}</dd>
+      <dt>Email</dt><dd>${c.email?`${esc(c.email)}<button class="copy" data-copy="${esc(c.email)}">Copier</button>`:`<span style="color:var(--muted)">Non trouvé</span>`}</dd>
+      ${c.linkedin?`<dt>LinkedIn</dt><dd><a href="${esc(c.linkedin)}" target="_blank" rel="noopener">Voir le profil</a></dd>`:""}
+      ${c.note?`<dt>À savoir</dt><dd>${esc(c.note)}</dd>`:""}
+      <dt>Preuve</dt><dd style="color:var(--muted)">${esc(c.preuve)}</dd>
+    </dl>
+  </div>`;
+}
+
+function mailHTML(r){
+  const m=r.mail||{}, d=drafts["mail:"+r.id]||{}, dis=canWrite?"":"disabled", u=mailUi[r.id]||{};
+  const to=d.to??m.to??(r.coordo?.email||r.email||""), su=d.subject??m.subject??"", bo=d.body??m.body??"";
+  const state=m.sentAt?`<span class="pill"><i class="dot" style="background:var(--s-rdv)"></i>Envoyé le ${new Date(m.sentAt).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</span>`:(m.body?`<span class="pill"><i class="dot" style="background:var(--accent)"></i>Brouillon prêt</span>`:"");
+  return `<div class="mailbox">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3>Email</h3>${state}</div>
+    <label>À<input id="mto-${r.id}" data-mail="to" data-for="${r.id}" value="${esc(to)}" ${dis}></label>
+    <label>Objet<input id="msu-${r.id}" data-mail="subject" data-for="${r.id}" value="${esc(su)}" placeholder="Objet de l'email" ${dis}></label>
+    <label>Texte<textarea id="mbo-${r.id}" data-mail="body" data-for="${r.id}" rows="10" placeholder="Rédigez l'email ici. Il est enregistré quand vous quittez le champ." ${dis}>${esc(bo)}</textarea></label>
+    <div class="logrow">
+      ${sampleFn?`<button class="btn ghost" data-mailai="${r.id}" ${dis||(u.sending?"disabled":"")}>${bo?"Réécrire avec Claude":"Rédiger avec Claude"}</button>`:""}
+      ${mcp&&!m.sentAt?`<button class="btn" data-mailconfirm="${r.id}" ${dis||(u.sending?"disabled":"")}>Envoyer avec Gmail</button>`:""}
+      ${m.sentAt&&mcp?`<button class="btn ghost" data-mailconfirm="${r.id}" ${dis}>Renvoyer</button>`:""}
+      ${!mcp?`<button class="btn${m.sentAt?" ghost":""}" data-gmail="${r.id}" ${dis}>${m.sentAt?"Rouvrir dans Gmail":"Ouvrir dans Gmail"}</button>`:""}
+      ${!mcp&&!m.sentAt&&u.opened?`<button class="btn ghost" data-mailsent="${r.id}" ${dis}>C'est envoyé</button>`:""}
+    </div>
+    ${u.confirm?`<div class="confirm">
+      <div><b>Envoyer maintenant depuis votre Gmail ?</b><br>À <b>${esc(to)}</b> · « ${esc(su)} »</div>
+      <div class="logrow"><button class="btn" data-mailsend="${r.id}" ${u.sending?"disabled":""}>${u.sending?"Envoi en cours…":"Confirmer l'envoi"}</button><button class="btn ghost" data-mailcancel="${r.id}" ${u.sending?"disabled":""}>Annuler</button></div>
+    </div>`:""}
+    ${u.msg?`<div class="ai-msg ${u.msg.kind}">${esc(u.msg.text)}</div>`:""}
+    <details class="more"><summary>Autres actions</summary><div class="logrow">
+      <button class="btn ghost" data-copymail="${r.id}" data-part="to">Copier l'adresse</button>
+      <button class="btn ghost" data-copymail="${r.id}" data-part="subject">Copier l'objet</button>
+      <button class="btn ghost" data-copymail="${r.id}" data-part="body">Copier le texte</button>
+      ${m.body&&!m.sentAt?`<button class="btn ghost" data-mailsent="${r.id}" ${dis}>Marquer comme envoyé (envoyé ailleurs)</button>`:""}
+    </div></details>
+  </div>`;
+}
+
+// ---- Gmail, Claude, ajout de fiches ----
+const curMail=id=>{const g=f=>document.querySelector(`[data-mail="${f}"][data-for="${id}"]`)?.value??"";return{to:g("to").trim(),subject:g("subject").trim(),body:g("body")}};
+const MAILCODES={server_not_connected:"Gmail n'est pas connecté : ajoutez-le dans claude.ai › Paramètres › Connecteurs.",needs_reauth:"La connexion Gmail a expiré : reconnectez Gmail dans claude.ai › Paramètres › Connecteurs.",selection_required:"Plusieurs comptes Gmail sont connectés : choisissez celui à utiliser quand claude.ai vous le propose.",not_in_manifest:"L'envoi par Gmail n'est pas autorisé pour cette page. Autorisez Gmail dans les permissions de la page.",approval_required:"L'envoi demande votre accord : réessayez et acceptez la demande de claude.ai.",blocked_by_policy:"Votre organisation bloque l'envoi d'emails depuis cette page.",not_granted:"Les connecteurs ne sont pas disponibles dans cette vue.",capability_disabled:"Les connecteurs ne sont pas disponibles dans cette vue."};
+async function sendMail(id){
+  const r=rows.find(x=>x.id===id); if(!r||!mcp)return;
+  const {to,subject,body}=curMail(id); const u=mailUi[id]=mailUi[id]||{};
+  if(!/^[^\s@;,]+@[^\s@;,]+\.[^\s@;,]+$/.test(to)){u.msg={kind:"err",text:"Adresse email invalide : une seule adresse, sans espace."};u.confirm=false;renderList();return}
+  if(!subject||!body.trim()){u.msg={kind:"err",text:"L'objet et le texte ne peuvent pas être vides."};u.confirm=false;renderList();return}
+  u.sending=true;u.msg={kind:"",text:"Envoi en cours…"};renderList();
+  let res;
+  try{res=await mcp.callTool("Gmail","send_message",{to:[to],subject,body})}
+  catch(e){
+    u.sending=false;u.confirm=false;
+    if(e&&(e.code==="server_unavailable"||e.code==="upstream_error"||e.code==="cancelled"))u.msg={kind:"err",text:"Gmail n'a pas confirmé l'envoi. Vérifiez votre dossier « Envoyés » avant de réessayer, pour ne pas l'envoyer deux fois."};
+    else if(e&&e.code==="tool_error")u.msg={kind:"err",text:"Gmail a refusé l'envoi : "+(e.message||"erreur inconnue")};
+    else u.msg={kind:"err",text:MAILCODES[e&&e.code]||("Envoi impossible ("+(e&&e.code||"erreur")+").")};
+    renderList();return;
+  }
+  const p=(res&&res.payload)||{}, now=new Date().toISOString();
+  try{
+    await write(id,{mail:{to,subject,body,sentAt:now,gmailId:String(p.id||""),threadId:String(p.threadId||""),updatedAt:now},
+      history:[...(r.history||[]),{at:now,kind:"email",status:r.status||"a_appeler",note:`Email envoyé depuis Gmail à ${to} : « ${subject} »`}]});
+    u.msg={kind:"ok",text:"Email envoyé et ajouté à l'historique."};
+  }catch(_){u.msg={kind:"err",text:"L'email est parti, mais la fiche n'a pas pu être mise à jour : cliquez sur « Marquer comme envoyé »."}}
+  u.sending=false;u.confirm=false;renderList();
+}
+const aiErr=e=>({not_granted:"Vous n'avez pas autorisé Claude pour cette page.",sampling_disabled:"Claude n'est pas disponible pour ce compte.",rate_limited:"Trop de demandes à Claude pour le moment, réessayez dans un instant.",invalid_json:"Claude n'a pas répondu dans le bon format, réessayez.",refused:"Claude n'a pas pu traiter ce contenu.",session_expired:"Reconnectez-vous à claude.ai.",cancelled:"Annulé."}[e&&e.code]||"Claude n'a pas pu répondre, réessayez.");
+function ctxOf(r){
+  const c=r.coordo||{};
+  return JSON.stringify({structure:r.name,type:r.type||"CPTS",territoire:r.territoire,zone:r.zone,interlocuteur:c.nom||r.contact,poste:c.poste,statut_appel:(SMAP[r.status]||SMAP.a_appeler).label,notes:r.notes||"",
+    historique:(r.history||[]).slice(-6).map(h=>({date:h.at&&h.at.slice(0,10),type:h.kind==="email"?"email":"appel",resultat:(SMAP[h.status]||{}).label,note:h.note})),
+    email_actuel:(r.mail&&r.mail.body)?{objet:r.mail.subject,envoye:!!r.mail.sentAt}:null},null,1);
+}
+async function aiMail(id){
+  const r=rows.find(x=>x.id===id); if(!r||!sampleFn)return; const u=mailUi[id]=mailUi[id]||{};
+  u.msg={kind:"",text:"Claude rédige l'email…"};renderList();
+  const prompt=`Tu rédiges un email de prospection en français pour Alexandre, de Nosho. Nous sommes le ${TODAY_LABEL()}.
+${TONE}
+Tiens compte de l'historique : si un appel a eu lieu, fais-y référence précisément (message laissé, échange, personne citée, rappel convenu). Si rien ne s'est passé, annonce qu'Alexandre appellera dans les prochains jours. Si un email a déjà été envoyé, écris une relance courte et bienveillante.
+Fiche du prospect :
+${ctxOf(r)}
+Réponds uniquement avec un objet JSON : {"subject": "objet de l'email", "body": "texte complet en texte brut, paragraphes séparés par une ligne vide, signature incluse"}`;
+  try{
+    const j=await sampleFn.json(prompt,{cache:false});
+    if(!j||typeof j.body!=="string"||!j.body.trim())throw{code:"invalid_json"};
+    const to=curMail(id).to||(r.coordo&&r.coordo.email)||r.email||"";
+    delete drafts["mail:"+id];
+    await write(id,{mail:{to,subject:String(j.subject||""),body:j.body,updatedAt:new Date().toISOString()}});
+    u.msg={kind:"ok",text:"Brouillon rédigé par Claude. Relisez-le avant d'envoyer."};
+  }catch(e){u.msg={kind:"err",text:aiErr(e)}}
+  renderList();
+}
+async function aiAllo(id){
+  const r=rows.find(x=>x.id===id); if(!r||!sampleFn)return; const raw=(document.getElementById("allo-"+id)?.value||"").trim();
+  const k="allo:"+id; if(!raw){drafts[k]={msg:{kind:"err",text:"Collez d'abord le résumé de l'appel."}};renderList();return}
+  drafts[k]={raw,msg:{kind:"",text:"Claude analyse l'appel…"}};renderList();
+  const prompt=`Voici le résumé d'un appel de prospection passé avec Allo pour la structure « ${r.name} ». Nous sommes le ${TODAY_LABEL()} (date ISO ${today()}).
+Résumé collé :
+"""${raw.slice(0,6000)}"""
+Classe le résultat dans UN de ces codes : pas_reponse (personne n'a décroché, ligne occupée), message (messagerie, message laissé), rappeler (échange eu ou rappel convenu, à recontacter), rdv (rendez-vous fixé), pas_interesse, mauvais_num (mauvais numéro ou mauvaise personne).
+Propose une date de relance (format AAAA-MM-JJ, jour ouvré) : celle convenue dans l'appel si elle existe, sinon 2 jours ouvrés après aujourd'hui pour pas_reponse ou message, rien pour pas_interesse. Heure HH:MM seulement si elle est explicitement convenue.
+Réponds uniquement en JSON : {"outcome": "code", "note": "résumé factuel en 1 à 3 phrases, en français", "nextCall": "AAAA-MM-JJ ou vide", "nextTime": "HH:MM ou vide", "notes_permanentes": "informations durables à retenir sur le prospect, ou vide"}`;
+  try{
+    const j=await sampleFn.json(prompt,{modelTier:"quick",cache:false});
+    const ok=SMAP[j&&j.outcome]&&j.outcome!=="a_appeler";
+    if(!ok)throw{code:"invalid_json"};
+    drafts[id]={...drafts[id],outcome:j.outcome,note:String(j.note||"").slice(0,600),date:/^\d{4}-\d{2}-\d{2}$/.test(j.nextCall||"")?j.nextCall:"",time:/^\d{2}:\d{2}$/.test(j.nextTime||"")?j.nextTime:""};
+    if(j.notes_permanentes&&String(j.notes_permanentes).trim()){drafts[id].notes=((drafts[id].notes??r.notes??"")+(r.notes?"\n":"")+String(j.notes_permanentes).trim()).trim()}
+    drafts[k]={raw,msg:{kind:"ok",text:"Formulaire pré-rempli. Vérifiez puis cliquez sur « Enregistrer l'appel »."}};
+  }catch(e){drafts[k]={raw,msg:{kind:"err",text:aiErr(e)}}}
+  renderList();
+}
+const slug=s=>String(s).normalize("NFKD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60)||"prospect";
+async function aiAdd(){
+  const raw=$("#add-raw").value.trim(), msg=$("#add-ai-msg");
+  if(!raw){msg.textContent="Collez d'abord une source.";msg.className="ai-msg err";return}
+  if(!sampleFn){msg.textContent="Claude n'est pas disponible dans cette vue.";return}
+  msg.textContent="Claude lit la source…";msg.className="ai-msg";
+  try{
+    const j=await sampleFn.json(`Extrais les informations d'un prospect (structure de santé) à partir de ce texte. N'invente rien : laisse vide ce qui n'y figure pas.
+Texte :
+"""${raw.slice(0,8000)}"""
+Types possibles : ${TYPES.join(", ")}. Zones possibles : ${ZONES.join(", ")} (Lyon = arrondissements de Lyon ; sinon choisis la plus proche, ou "Autres prospects" hors Rhône).
+Réponds uniquement en JSON : {"name":"","type":"","zone":"","territoire":"","contactName":"","contactRole":"","tel":"","email":"","site":"","adresse":"","notes":""}`,{modelTier:"quick",cache:false});
+    const set=(sel,v)=>{if(v)$(sel).value=String(v)};
+    set("#add-name",j.name);if(TYPES.includes(j.type))$("#add-type").value=j.type;if(ZONES.includes(j.zone))$("#add-zone").value=j.zone;
+    set("#add-terr",j.territoire);set("#add-cname",j.contactName);set("#add-cpost",j.contactRole);set("#add-tel",j.tel);set("#add-email",j.email);set("#add-site",(j.site||"").replace(/^https?:\/\//,""));set("#add-adr",j.adresse);set("#add-notes",j.notes);
+    msg.textContent="Champs remplis. Vérifiez-les avant de créer la fiche.";msg.className="ai-msg ok";
+  }catch(e){msg.textContent=aiErr(e);msg.className="ai-msg err"}
+}
+async function addProspect(){
+  const v=s=>$(s).value.trim(), msg=$("#add-msg");
+  const name=v("#add-name"); if(!name){msg.textContent="Le nom de la structure est obligatoire.";msg.className="ai-msg err";return}
+  if(!col||!canWrite){msg.textContent="Vous ne pouvez pas modifier ce CRM.";msg.className="ai-msg err";return}
+  let id=slug(name.replace(/^cpts\s+/i,"")); const ids=new Set(rows.map(r=>r.id)); let n=2; while(ids.has(id))id=slug(name)+"-"+(n++);
+  const now=new Date().toISOString(), email=v("#add-email"), tel=v("#add-tel");
+  const doc={name,type:$("#add-type").value,zone:$("#add-zone").value,territoire:v("#add-terr"),tel:tel||"À trouver",tel2:"",contact:[v("#add-cname"),v("#add-cpost")].filter(Boolean).join(" · "),
+    email,site:v("#add-site").replace(/^https?:\/\//,""),adresse:v("#add-adr"),remarque:"",source:"Ajouté au CRM le "+now.slice(0,10),fiab:"annuaire",order:1000+rows.length,
+    status:"a_appeler",nextCall:"",nextTime:"",lastCall:"",notes:v("#add-notes"),history:[],createdAt:now,
+    coordo:{nom:v("#add-cname"),poste:v("#add-cpost"),tel,email,linkedin:"",statut:v("#add-cname")?"a_verifier":"inconnu",preuve:"Saisie du "+now.slice(0,10),note:""}};
+  msg.textContent="Création…";msg.className="ai-msg";
+  const um=pendingUm&&digits9(pendingUm.number)===digits9(tel)?pendingUm:null;
+  if(um){doc.history=[{at:um.at||now,status:um.status||"rappeler",note:um.note||um.summary||"",source:"allo",alloId:um.key}];doc.status=um.status||"rappeler";doc.lastCall=um.at||now}
+  try{await mutate(d=>{d.cpts[id]=doc;const sa=d.sync.allo;if(um&&sa)sa.unmatched=(sa.unmatched||[]).filter(x=>x.key!==um.key)},"Nouvelle fiche "+name);pendingUm=null;
+    ["#add-name","#add-terr","#add-cname","#add-cpost","#add-tel","#add-email","#add-site","#add-adr","#add-notes","#add-raw"].forEach(s=>$(s).value="");
+    $("#add-ai-msg").textContent="";msg.textContent="";$("#addbox").hidden=true;
+    ui.status="all";ui.zone="all";ui.q="";$("#q").value="";$("#zone").value="all";ui.open=id;toast("Fiche créée : "+name);
+    setTimeout(()=>document.getElementById("row-"+id)?.scrollIntoView({behavior:"smooth",block:"start"}),300);
+  }catch(e){msg.textContent=e&&e.code==="quota_exceeded"?"Le CRM est plein : supprimez des fiches.":"Création impossible, réessayez.";msg.className="ai-msg err"}
+}
+function renderConn(){
+  const el=$("#conn"); if(!el)return;
+  const st=store.state;
+  const g=st==="ok"?`<span class="cchip on">Données : dépôt GitHub privé${store.savedAt?` · enregistré ${hm(store.savedAt)}`:""}</span>`
+    :st==="notoken"?`<span class="cchip warn">GitHub : jeton à ajouter dans Réglages</span>`
+    :st==="loading"?`<span class="cchip">GitHub : chargement…</span>`
+    :`<span class="cchip warn" title="${esc(store.err)}">GitHub : ${esc(store.errShort||"erreur")}</span>`;
+  const s=alloSync||{};
+  const lastA=[alloLocal.last,s.lastSyncAt].filter(Boolean).sort().pop();
+  const a=!cfg.allo?`<span class="cchip">Allo : clé à ajouter dans Réglages</span>`
+    :alloLocal.err?`<span class="cchip warn" title="${esc(alloLocal.err)}">Allo : ${esc(alloLocal.errShort)}</span>`
+    :alloLocal.running?`<span class="cchip">Allo : synchro…</span>`
+    :lastA?`<span class="cchip on">Allo : synchro auto · ${hm(lastA)}</span>`
+    :`<span class="cchip">Allo : synchro en attente</span>`;
+  el.innerHTML=g+a+`<span class="cchip on">Gmail : emails prêts à envoyer</span>`;
+  const box=$("#unmatched"); if(!box)return;
+  const um=(s.unmatched||[]).filter(u=>!dismissed.has(u.key));
+  box.hidden=!um.length;
+  box.innerHTML=um.length?`<div class="ag-head"><div><span class="eyebrow">Allo</span><h2 style="margin:2px 0 0;font-size:16px">Appels sans fiche dans le CRM (${um.length})</h2></div></div>`+
+    um.map(u=>`<div class="ag-item"><div class="ag-time"><small>${u.at?new Date(u.at).toLocaleString("fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""}</small></div>
+      <div class="ag-main"><div class="name"><span class="phone">${esc(u.number)}</span></div>${u.title?`<div class="sub" style="white-space:normal">${esc(u.title)}</div>`:""}${u.summary?`<div class="ag-note">${esc(u.summary.slice(0,220))}</div>`:""}</div>
+      <div class="ag-act"><div class="logrow"><button class="btn ghost" data-umhide="${esc(u.key)}">Ignorer</button><button class="btn" data-umadd="${esc(u.key)}">Créer la fiche</button></div></div></div>`).join(""):"";
+}
+let alloSync=null, pendingUm=null; const dismissed=new Set((()=>{try{return JSON.parse(localStorage.getItem("allo-dismissed")||"[]")}catch(_){return[]}})());
+
+function detailHTML(r){
+  const d=drafts[r.id]||{};
+  const hist=(r.history||[]).slice().reverse();
+  const dis=canWrite?"":"disabled";
+  return `<div class="detail">
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      ${coordoHTML(r.coordo)}
+      <dl class="facts">
+        ${r.type&&r.type!=="CPTS"?`<dt>Type</dt><dd>${esc(r.type)}</dd>`:""}
+        <dt>Tél. structure</dt><dd><span class="phone">${esc(r.tel)}</span>${r.tel&&!/non/i.test(r.tel)?`<button class="copy" data-copy="${esc(r.tel)}">Copier</button>`:""}</dd>
+        ${r.tel2?`<dt>Autre n°</dt><dd>${esc(r.tel2)}</dd>`:""}
+        <dt>Interlocuteur</dt><dd>${esc(r.contact)}</dd>
+        <dt>Email</dt><dd>${esc(r.email)}${r.email&&r.email.includes("@")?`<button class="copy" data-copy="${esc(r.email.split(/\s*;\s*/)[0])}">Copier</button>`:""}</dd>
+        <dt>Site</dt><dd>${r.site&&/\./.test(r.site)&&!/\s/.test(r.site)?`<a href="https://${esc(r.site)}" target="_blank" rel="noopener">${esc(r.site)}</a>`:esc(r.site)}</dd>
+        <dt>Adresse</dt><dd>${esc(r.adresse)}</dd>
+        <dt>Territoire</dt><dd>${esc(r.territoire)}</dd>
+        ${r.creation?`<dt>Création</dt><dd>${new Date(r.creation+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})}${r.siren?` · <a href="https://annuaire-entreprises.data.gouv.fr/entreprise/${esc(r.siren)}" target="_blank" rel="noopener">SIREN ${esc(r.siren)}</a>`:""}${r.creationNote?`<br><span style="color:var(--muted)">${esc(r.creationNote)}</span>`:""}</dd>`:""}
+        ${r.remarque?`<dt>À savoir</dt><dd>${esc(r.remarque)}</dd>`:""}
+        <dt>Source n°</dt><dd>${/^https?:/.test(r.source||"")?`<a href="${esc(r.source)}" target="_blank" rel="noopener">voir la source</a>`:esc(r.source)}</dd>
+      </dl>
+      <div>
+        <label for="notes-${r.id}" style="font-size:12px;color:var(--muted)">Notes permanentes (enregistrées en quittant le champ)</label>
+        <textarea id="notes-${r.id}" data-notes="${r.id}" ${dis} placeholder="Besoins, objections, organisation du secrétariat…">${esc(d.notes??r.notes??"")}</textarea>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div class="logbox">
+        <h3>Noter un appel</h3>
+        ${sampleFn?`<details class="allo"${(drafts["allo:"+r.id]||{}).raw?" open":""}><summary>Depuis Allo : coller le résumé de l'appel</summary>
+          <textarea id="allo-${r.id}" rows="4" placeholder="Copiez le résumé de l'appel dans Allo (bouton « Copier » du résumé) et collez-le ici." ${dis}>${esc((drafts["allo:"+r.id]||{}).raw||"")}</textarea>
+          <div class="logrow"><button class="btn ghost" data-alloai="${r.id}" ${dis}>Analyser avec Claude</button>${(drafts["allo:"+r.id]||{}).msg?`<span class="ai-msg ${drafts["allo:"+r.id].msg.kind}">${esc(drafts["allo:"+r.id].msg.text)}</span>`:""}</div>
+        </details>`:""}
+        <div class="outcomes">${STATUSES.filter(s=>s.id!=="a_appeler").map(s=>`<button class="chip" style="--sc:var(${s.c})" data-outcome="${s.id}" data-for="${r.id}" aria-pressed="${d.outcome===s.id}" ${dis}>${s.label}</button>`).join("")}</div>
+        <div class="logrow">
+          <label class="grow">Commentaire<input id="note-${r.id}" data-note="${r.id}" value="${esc(d.note||"")}" placeholder="Ex. secrétaire, rappeler après 14h" ${dis}></label>
+          <label>Relance le<input type="date" id="date-${r.id}" data-date="${r.id}" value="${esc(d.date??(r.nextCall||""))}" ${dis}></label>
+          <label>à (facultatif)<input type="time" id="time-${r.id}" data-time="${r.id}" value="${esc(d.time??(r.nextTime||""))}" ${dis}></label>
+        </div>
+        <div class="logrow">
+          <button class="btn" data-save="${r.id}" ${canWrite&&d.outcome?"":"disabled"}>Enregistrer l'appel</button>
+          ${(r.status&&r.status!=="a_appeler")?`<button class="btn ghost" data-reset="${r.id}" ${dis}>Remettre à « À appeler »</button>`:""}
+        </div>
+      </div>
+      ${mailHTML(r)}
+      <div>
+        <h3 style="margin:0 0 8px;font-size:13px">Historique</h3>
+        ${hist.length?`<ul class="hist">${hist.map(h=>`<li><time>${fmtAt(h.at)}</time><div>${h.kind==="email"?`<span class="pill"><i class="dot" style="background:var(--accent)"></i>Email envoyé</span>`:pill(h.status)}${h.note?` <span>${esc(h.note)}</span>`:""}${h.nextCall?` <span style="color:var(--muted)">→ relance ${fmtDay(h.nextCall)}</span>`:""}</div></li>`).join("")}</ul>`:`<p style="margin:0;color:var(--muted);font-size:13px">Aucun appel noté pour l'instant.</p>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderList(){
+  const list=$("#list");
+  if(!loaded)return;
+  if(!rows.length){list.innerHTML=`<div class="empty">Aucune CPTS dans le suivi pour l'instant.</div>`;return}
+  const vis=rows.filter(matches);
+  if(!vis.length){list.innerHTML=`<div class="empty">Aucune CPTS ne correspond à ces filtres.</div>`;return}
+  // preserve focus
+  const act=document.activeElement, actId=act&&act.id, sel=act&&act.selectionStart!=null?[act.selectionStart,act.selectionEnd]:null;
+  let html="";
+  let groups;
+  if(ui.sort==="zone") groups=ZONES.map(z=>[z,vis.filter(r=>r.zone===z).sort((a,b)=>(a.order||0)-(b.order||0))]);
+  else {const dir=ui.sort==="recent"?-1:1; groups=[[ui.sort==="recent"?"Créées le plus récemment en premier":"Créées le plus anciennement en premier",vis.slice().sort((a,b)=>dir*String(a.creation||"9999").localeCompare(String(b.creation||"9999")))]];}
+  for(const [z,zr] of groups){
+    if(!zr.length)continue;
+    html+=`<div class="zone-h">${esc(z)} · ${zr.length}</div>`;
+    for(const r of zr){
+      const open=ui.open===r.id;
+      const late=isDue(r);
+      const c=r.coordo||{};
+      const callTel=c.tel||r.tel;
+      const tag=c.statut?`<i class="dot" style="background:var(${COORDO_C[c.statut]})"></i>${c.tel?"Coordo · ":"Tél. CPTS · "}${COORDO[c.statut]}`:`<i class="dot" style="background:var(${FIAB_C[r.fiab]||"--s-todo"})"></i>${FIAB[r.fiab]||""}`;
+      const who=c.nom?`${c.nom} · ${c.poste}`:(c.poste||r.contact);
+      html+=`<div class="row${open?" open":""}" id="row-${r.id}">
+        <button class="row-main" data-toggle="${r.id}" aria-expanded="${open}">
+          <div class="c-n" style="min-width:0"><div class="name">${esc(r.name)}${r.creation?` <span class="age">créée ${fmtMonth(r.creation)}</span>`:""}${r.mail?.sentAt?` <span class="age">email envoyé</span>`:r.mail?.body?` <span class="age" style="color:var(--accent)">email prêt</span>`:""}</div><div class="sub">${esc(who)}</div></div>
+          <div class="c-p" style="min-width:0"><div class="phone">${esc(callTel)}</div><div class="fiab">${tag}</div></div>
+          <div class="c-s">${pill(r.status)}${r.nextCall&&!CLOSED.has(r.status)?`<div class="when${late?" late":""}">Relance ${fmtDay(r.nextCall)}${r.nextTime?" à "+esc(r.nextTime):""}</div>`:r.lastCall?`<div class="when">Appelé le ${new Date(r.lastCall).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</div>`:""}</div>
+          <svg class="chev" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+        ${open?detailHTML(r):""}
+      </div>`;
+    }
+  }
+  list.innerHTML=html;
+  if(actId){const el=document.getElementById(actId);if(el){el.focus();if(sel&&el.setSelectionRange)try{el.setSelectionRange(sel[0],sel[1])}catch(e){}}}
+}
+
+// ---- Carte ----
+const POS={"lyon-3e":[697.3,873.3],"lyon-5":[601.8,864.2],"lyon-6e":[667.3,841.5],"lyon-7e":[634.3,891],"lyon-8e":[679.4,900.8],"lyon-9e":[615.7,831.9],"croix-rousse-presqu-ile":[637.3,833.3],"de-villeurbanne":[693.7,847.2],"de-caluire":[658.4,794.3],"lyon-nord-la-cotiere":[689.2,763.8],"du-val-de-saone":[658.3,734.3],"de-vaulx-en-velin-spvv":[733,833.9],"le-grand-large":[757.6,842.8],"de-l-est-lyonnais-copsel":[852.1,948.6],"de-bron":[726.1,899.9],"interpro-sante-venissieux":[691.2,953],"saint-priest-mions":[770.1,959.4],"lyon-sud-aprosalys":[627,927.9],"de-l-ozon":[686.3,1081.8],"de-l-ouest-lyonnais":[582,853.4],"de-l-yzeron":[574.6,883.4],"des-vallons-du-lyonnais":[451.3,890.7],"des-monts-du-lyonnais":[406.2,728.8],"beaujolais-dombes":[508.3,497.6],"de-l-ouest-rhodanien":[270.6,678.5],"des-coteaux-rhodaniens":[585.1,1092.6],"region-de-condrieu":[570.5,1323.4]};
+const VIEWS={metro:[555,715,310,390],rhone:[-10,-10,1020,1355]};
+let vb=VIEWS.metro.slice(), view="metro";
+const short=n=>String(n||"").replace(/^CPTS\s+(de\s+l'|de\s+|du\s+|des\s+)?/i,"").replace(/\s*\(.*\)$/,"");
+function renderMap(){
+  const g=$("#pins"); if(!g)return;
+  const r=vb[2]/62;
+  const list=rows.filter(x=>POS[x.id]).sort((a,b)=>(a.id===ui.sel)-(b.id===ui.sel));
+  g.innerHTML=list.map(x=>{
+    const [px,py]=POS[x.id], s=SMAP[x.status]||SMAP.a_appeler, sel=ui.sel===x.id, dim=!matches(x), due=isDue(x);
+    const rr=sel?r*1.45:r;
+    const label=sel?`<text x="${rr+r*.5}" y="${r*.55}" font-size="${r*2.3}">${esc(short(x.name))}</text>`:"";
+    return `<g class="pin${sel?" sel":""}${dim?" dim":""}" data-pin="${x.id}" transform="translate(${px} ${py})" tabindex="0" role="button" aria-label="${esc(x.name)} : ${s.label}">
+      ${due?`<circle class="ring" r="${rr+r*.6}"/>`:""}<circle class="dot-c" r="${rr}" fill="var(${s.c})"/>${label}<title>${esc(x.name)} · ${s.label}</title></g>`;
+  }).join("");
+  $("#mapLegend").innerHTML=STATUSES.map(s=>`<span><i class="dot" style="background:var(${s.c})"></i>${s.label}</span>`).join("")+`<span><i class="dot" style="background:none;border:1.5px dashed var(--s-no)"></i>Relance due</span>`;
+  renderCard();
+}
+function renderCard(){
+  const box=$("#mapCard"), x=rows.find(r=>r.id===ui.sel);
+  if(!x){box.innerHTML=`<div class="map-empty"><span class="eyebrow">Carte</span><strong style="color:var(--fg);font-size:16px">Cliquez sur un point pour afficher la CPTS</strong><span>La couleur du point indique où en est l'appel. Un cercle en pointillés signale une relance due.</span></div>`;return}
+  const c=x.coordo||{}, tel=c.tel||x.tel, st=c.statut;
+  box.innerHTML=`
+    <span class="eyebrow">${esc(x.zone)}</span>
+    <h2>${esc(x.name)}</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${pill(x.status)}${x.nextCall&&!CLOSED.has(x.status)?`<span class="when${isDue(x)?" late":""}" style="margin:0">Relance ${fmtDay(x.nextCall)}</span>`:""}</div>
+    <div style="border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:4px">
+      <span class="eyebrow">À appeler</span>
+      <strong style="font-size:15px">${esc(c.nom||"Coordinateur·rice inconnu·e")}</strong>
+      <span class="sub" style="white-space:normal">${esc(c.poste||x.contact)}</span>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="big">${esc(tel)}</span>${tel&&!/non/i.test(tel)?`<button class="copy" data-copy="${esc(tel)}">Copier</button>`:""}</div>
+      ${st?`<span class="fiab"><i class="dot" style="background:var(${COORDO_C[st]})"></i>${c.tel?"N° coordo":"N° de la CPTS"} · ${COORDO[st]}</span>`:""}
+      ${c.email?`<div style="font-size:13px;margin-top:4px">${esc(c.email)}<button class="copy" data-copy="${esc(c.email)}">Copier</button></div>`:""}
+      ${c.note?`<div style="font-size:12.5px;color:var(--muted)">${esc(c.note)}</div>`:""}
+    </div>
+    <button class="btn" data-openrow="${x.id}" style="align-self:flex-start;margin-top:auto">Ouvrir la fiche et noter l'appel</button>`;
+}
+function setView(v){
+  view=v; document.querySelectorAll("[data-view]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.view===v));
+  const from=vb.slice(), to=VIEWS[v], svg=$("#map");
+  const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){vb=to.slice();svg.setAttribute("viewBox",vb.join(" "));renderMap();return}
+  const t0=performance.now(), D=380;
+  (function step(t){const k=Math.min(1,(t-t0)/D), e=1-Math.pow(1-k,3);
+    vb=from.map((f,i)=>f+(to[i]-f)*e); svg.setAttribute("viewBox",vb.join(" ")); renderMap();
+    if(k<1)requestAnimationFrame(step)})(t0);
+}
+function selectPin(id){
+  ui.sel=id; const p=POS[id];
+  if(view==="metro"&&p){const [x,y,w,h]=VIEWS.metro; if(p[0]<x||p[0]>x+w||p[1]<y||p[1]>y+h){setView("rhone");}}
+  renderMap();
+}
+$("#map").addEventListener("click",e=>{const p=e.target.closest("[data-pin]");if(p)selectPin(p.dataset.pin)});
+$("#map").addEventListener("keydown",e=>{const p=e.target.closest("[data-pin]");if(p&&(e.key==="Enter"||e.key===" ")){e.preventDefault();selectPin(p.dataset.pin)}});
+
+function render(){renderSummary();renderMap();renderList()}
+
+function write(id,data){
+  const ref=col.doc(id);
+  const p=(pending[id]||Promise.resolve()).then(()=>ref.update(data)).catch(e=>{
+    if(e&&e.code==="invalid_argument"){canWrite=false;toast("Lecture seule : vous ne pouvez pas modifier ce suivi.");render()}
+    else toast("Enregistrement impossible pour le moment. Réessayez.");
+    throw e;
+  });
+  pending[id]=p.catch(()=>{});
+  return p;
+}
+
 document.addEventListener("click",async e=>{
-  const b=e.target.closest("button");if(!b)return;
-  if(b.dataset.open){openForm(null);return}
-  if(b.dataset.close){$("#form").hidden=true;editing=null;return}
-  if(b.dataset.copy){try{await navigator.clipboard.writeText(b.dataset.copy);toast("Adresse copiée")}catch(_){toast(b.dataset.copy)}return}
-  if(b.dataset.edit){openForm(links.find(l=>l.id===b.dataset.edit));$("#form").scrollIntoView({behavior:"smooth",block:"start"});return}
-  if(b.dataset.pin){const l=links.find(x=>x.id===b.dataset.pin);patch(l.id,{pinned:!l.pinned});return}
-  if(b.dataset.del){confirmDel=b.dataset.del;render();return}
-  if(b.dataset.delno){confirmDel=null;render();return}
-  if(b.dataset.delok){const id=b.dataset.delok;confirmDel=null;local.added=local.added.filter(x=>x.id!==id);if(BASE.some(x=>x.id===id))local.deleted.push(id);saveLocal();render();toast("Lien supprimé");return}
+  const t=e.target.closest("button");if(!t)return;
+  if(t.dataset.gmail){const id=t.dataset.gmail,r=rows.find(x=>x.id===id);if(!r)return;const cm=curMail(id),u=mailUi[id]=mailUi[id]||{};
+    if(!/^[^\s@;,]+@[^\s@;,]+\.[^\s@;,]+$/.test(cm.to)){u.msg={kind:"err",text:"Adresse email invalide : une seule adresse, sans espace."};renderList();return}
+    if(!cm.subject||!cm.body.trim()){u.msg={kind:"err",text:"L'objet et le texte ne peuvent pas être vides."};renderList();return}
+    window.open(gmailUrl(cm),"_blank","noopener");
+    u.opened=true;u.msg={kind:"",text:"Gmail s'est ouvert avec l'email prêt. Une fois envoyé, cliquez « C'est envoyé » pour l'ajouter à l'historique."};
+    const m=r.mail||{};if(cm.to!==(m.to||"")||cm.subject!==(m.subject||"")||cm.body!==(m.body||"")){try{await write(id,{mail:{...cm,updatedAt:new Date().toISOString()}});delete drafts["mail:"+id]}catch(_){}}
+    renderList();return}
+  if(t.dataset.setup){$("#setup").hidden=false;fillCfg();$("#setup").scrollIntoView({behavior:"smooth",block:"start"});return}
+  if(t.dataset.setupclose){$("#setup").hidden=true;return}
+  if(t.dataset.cfgsave){t.disabled=true;await saveCfg();t.disabled=false;return}
+  if(t.dataset.cfgclear){clearCfg();return}
+  if(t.dataset.view){setView(t.dataset.view);return}
+  if(t.dataset.openrow){const id=t.dataset.openrow;ui.status="all";ui.zone="all";ui.q="";$("#q").value="";$("#zone").value="all";ui.open=id;render();document.getElementById("row-"+id)?.scrollIntoView({behavior:"smooth",block:"start"});return}
+  if(t.dataset.toggle){ui.sel=t.dataset.toggle;renderMap();ui.open=ui.open===t.dataset.toggle?null:t.dataset.toggle;renderList();return}
+  if(t.dataset.agday){ag.day=t.dataset.agday;if(ag.day<ag.start||ag.day>addDays(ag.start,6))ag.start=ag.day;renderAgenda();return}
+  if(t.dataset.agshift){ag.start=addDays(ag.start,+t.dataset.agshift);ag.day=ag.start;renderAgenda();return}
+  if(t.dataset.agtoday){ag.start=today();ag.day=today();renderAgenda();return}
+  if(t.dataset.postpone){const id=t.dataset.postpone,r=rows.find(x=>x.id===id);if(!r)return;const nd=nextWorkday(r.nextCall<today()?today():r.nextCall);
+    try{await write(id,{nextCall:nd});toast("Relance reportée au "+fmtDay(nd))}catch(_){}return}
+  if(t.dataset.jump){ui.status="all";ui.zone="all";ui.q="";$("#q").value="";$("#zone").value="all";ui.open=t.dataset.jump;render();document.getElementById("row-"+t.dataset.jump)?.scrollIntoView({behavior:"smooth",block:"start"});return}
+  if(t.dataset.status){ui.status=t.dataset.status;render();return}
+  if(t.dataset.copy){const v=t.dataset.copy;try{await navigator.clipboard.writeText(v);toast("Copié : "+v)}catch(_){toast(v)}return}
+  if(t.dataset.outcome){const id=t.dataset.for;drafts[id]={...drafts[id],outcome:drafts[id]?.outcome===t.dataset.outcome?null:t.dataset.outcome};renderList();return}
+  if(t.dataset.save){
+    const id=t.dataset.save,r=rows.find(x=>x.id===id),d=drafts[id]||{};if(!d.outcome||!r)return;
+    const now=new Date().toISOString();
+    const nextCall=CLOSED.has(d.outcome)?"":(d.date??r.nextCall??"");
+    const nextTime=nextCall?(d.time??r.nextTime??""):"";
+    const entry={at:now,status:d.outcome,note:(d.note||"").trim()};if(nextCall)entry.nextCall=nextCall;if(nextTime)entry.nextTime=nextTime;
+    t.disabled=true;
+    const notesUpd=(d.notes!=null&&d.notes!==(r.notes||""))?{notes:d.notes}:{};
+    try{await write(id,{status:d.outcome,lastCall:now,nextCall,nextTime,...notesUpd,history:[...(r.history||[]),entry]});
+      drafts[id]={};delete drafts["allo:"+id];toast("Appel enregistré : "+SMAP[d.outcome].label);render()}
+    catch(_){t.disabled=false}
+    return}
+  if(t.dataset.copymail){const id=t.dataset.copymail,p=t.dataset.part,el=document.querySelector(`[data-mail="${p}"][data-for="${id}"]`);const v=el?el.value:"";if(!v){toast("Rien à copier");return}
+    try{await navigator.clipboard.writeText(v);toast(p==="body"?"Texte copié":p==="subject"?"Objet copié":"Adresse copiée")}catch(_){el.focus();el.select();toast("Sélectionné : faites Cmd+C")}return}
+  if(t.dataset.umhide){dismissed.add(t.dataset.umhide);try{localStorage.setItem("allo-dismissed",JSON.stringify([...dismissed]))}catch(_){}renderConn();return}
+  if(t.dataset.umadd){const u=((alloSync||{}).unmatched||[]).find(x=>x.key===t.dataset.umadd);if(!u)return;
+    pendingUm=u;$("#addbox").hidden=false;$("#add-tel").value=u.number||"";$("#add-cname").value=u.title||"";$("#add-notes").value=u.summary||"";
+    $("#addbox").scrollIntoView({behavior:"smooth",block:"start"});return}
+  if(t.dataset.addopen){$("#addbox").hidden=false;$("#add-name").focus();$("#addbox").scrollIntoView({behavior:"smooth",block:"start"});return}
+  if(t.dataset.addclose){$("#addbox").hidden=true;pendingUm=null;return}
+  if(t.dataset.addai){t.disabled=true;await aiAdd();t.disabled=false;return}
+  if(t.dataset.addsave){t.disabled=true;await addProspect();t.disabled=false;return}
+  if(t.dataset.mailconfirm){const id=t.dataset.mailconfirm;const u=mailUi[id]=mailUi[id]||{};
+    // enregistre d'abord les champs modifiés
+    const r=rows.find(x=>x.id===id),cm=curMail(id),m=r&&r.mail||{};
+    if(r&&(cm.to!==(m.to||"")||cm.subject!==(m.subject||"")||cm.body!==(m.body||""))){try{await write(id,{mail:{...cm,updatedAt:new Date().toISOString()}});delete drafts["mail:"+id]}catch(_){}}
+    u.confirm=true;u.msg=null;renderList();return}
+  if(t.dataset.mailcancel){const u=mailUi[t.dataset.mailcancel];if(u){u.confirm=false}renderList();return}
+  if(t.dataset.mailsend){await sendMail(t.dataset.mailsend);return}
+  if(t.dataset.mailai){t.disabled=true;await aiMail(t.dataset.mailai);return}
+  if(t.dataset.alloai){t.disabled=true;await aiAllo(t.dataset.alloai);return}
+  if(t.dataset.mailsent){const id=t.dataset.mailsent,r=rows.find(x=>x.id===id);if(!r)return;const now=new Date().toISOString();
+    try{await write(id,{mail:{sentAt:now},history:[...(r.history||[]),{at:now,kind:"email",status:r.status||"a_appeler",note:"Email envoyé à "+((r.mail||{}).to||"")+" : « "+((r.mail||{}).subject||"")+" »"}]});toast("Email marqué comme envoyé")}catch(_){}return}
+  if(t.dataset.reset){const id=t.dataset.reset;try{await write(id,{status:"a_appeler",nextCall:""});toast("Remise à appeler")}catch(_){}return}
 });
-$("#q").addEventListener("input",render);
-render();
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="q"){ui.q=t.value;renderList();renderMap();return}
+  if(t.dataset.note){drafts[t.dataset.note]={...drafts[t.dataset.note],note:t.value};return}
+  if(t.dataset.date){drafts[t.dataset.date]={...drafts[t.dataset.date],date:t.value};return}
+  if(t.dataset.time){drafts[t.dataset.time]={...drafts[t.dataset.time],time:t.value};return}
+  if(t.dataset.notes){drafts[t.dataset.notes]={...drafts[t.dataset.notes],notes:t.value};return}
+  if(t.dataset.mail){const k="mail:"+t.dataset.for;drafts[k]={...drafts[k],[t.dataset.mail]:t.value};return}
+  if(t.id&&t.id.startsWith("allo-")){const k="allo:"+t.id.slice(5);drafts[k]={...drafts[k],raw:t.value};return}
+});
+document.addEventListener("change",async e=>{
+  const t=e.target;
+  if(t.id==="zone"){ui.zone=t.value;render();return}
+  if(t.id==="sort"){ui.sort=t.value;try{localStorage.setItem("cpts-sort",t.value)}catch(_){}renderList();return}
+  if(t.dataset.notes){const id=t.dataset.notes,r=rows.find(x=>x.id===id);if(!r||t.value===(r.notes||""))return;
+    try{await write(id,{notes:t.value});const d=drafts[id];if(d)delete d.notes;toast("Notes enregistrées")}catch(_){}}
+  if(t.dataset.mail){const id=t.dataset.for,f=t.dataset.mail,r=rows.find(x=>x.id===id);if(!r||t.value===((r.mail||{})[f]??""))return;
+    try{await write(id,{mail:{[f]:t.value,updatedAt:new Date().toISOString()}});const d=drafts["mail:"+id];if(d)delete d[f];toast("Email enregistré")}catch(_){}}
+});
+
+$("#zone").innerHTML=`<option value="all">Toutes les zones</option>`+ZONES.map(z=>`<option>${z}</option>`).join("");
+$("#sort").value=ui.sort;
+renderSummary();renderMap();
+
+// ---- Stockage : fichier data/crm.json du dépôt GitHub privé (jamais dans cette page publique) ----
+const CFG_KEY="crm-nosho-cfg-v1";
+const DEF={owner:"alexandre309",repo:"suivi-cpts-lyon",path:"data/crm.json",token:"",allo:"",gmailUser:""};
+let cfg={...DEF};
+try{cfg={...DEF,...JSON.parse(localStorage.getItem(CFG_KEY)||"{}")}}catch(_){}
+const saveCfgLocal=()=>{try{localStorage.setItem(CFG_KEY,JSON.stringify(cfg))}catch(_){}};
+const store={state:cfg.token?"loading":"notoken",data:null,sha:null,etag:null,err:"",errShort:"",savedAt:null,busy:0,q:Promise.resolve()};
+const b64e=s=>{const b=new TextEncoder().encode(s);let x="";for(let i=0;i<b.length;i+=0x8000)x+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(x)};
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(String(s).replace(/\s/g,"")),c=>c.charCodeAt(0)));
+const ghUrl=()=>`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}`;
+const ghHead=()=>({Authorization:"Bearer "+cfg.token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"});
+const hm=s=>{const d=new Date(s);return d.toLocaleDateString("fr-FR",{weekday:"short"})+" "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})};
+function ghErr(status,j){
+  const m=(j&&j.message)||"";
+  if(status===401)return["Jeton GitHub refusé : il a expiré ou il est mal copié. Créez-en un nouveau dans Réglages.","jeton refusé"];
+  if(status===403&&/rate limit/i.test(m))return["Trop de requêtes vers GitHub : réessayez dans quelques minutes.","limite atteinte"];
+  if(status===403||status===404)return["Le jeton n'a pas le droit d'écrire dans le dépôt "+cfg.repo+" : vérifiez « Only select repositories » et « Contents : Read and write ».","accès refusé"];
+  return["GitHub ne répond pas ("+status+(m?" : "+m:"")+").","erreur "+status];
+}
+function fail(long,short){store.state="err";store.err=long;store.errShort=short;renderConn();showGate()}
+function normalize(d){d=d&&typeof d==="object"?d:{};d.cpts=d.cpts&&typeof d.cpts==="object"?d.cpts:{};d.sync=d.sync&&typeof d.sync==="object"?d.sync:{};return d}
+async function pull(force){
+  if(!cfg.token){store.state="notoken";return false}
+  const h=ghHead(); if(store.etag&&!force)h["If-None-Match"]=store.etag;
+  let r; try{r=await fetch(ghUrl(),{headers:h,cache:"no-store"})}catch(e){if(store.state!=="ok")fail("Impossible de joindre GitHub : vérifiez la connexion internet.","hors ligne");return false}
+  if(r.status===304)return false;
+  if(r.status===404){
+    const rr=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}`,{headers:ghHead(),cache:"no-store"}).catch(()=>null);
+    if(rr&&rr.ok){store.data=normalize({});store.sha=null;store.etag=null;store.state="ok";store.err="";return true}
+    fail("Le jeton n'a pas accès au dépôt "+cfg.repo+" : vérifiez « Only select repositories › "+cfg.repo+" » et « Contents : Read and write ».","pas d'accès au dépôt");return false;
+  }
+  if(!r.ok){const j=await r.json().catch(()=>null);const [l,s]=ghErr(r.status,j);fail(l,s);return false}
+  const j=await r.json();
+  let txt;
+  if(j.content&&j.encoding==="base64")txt=b64d(j.content);
+  else{const rr=await fetch(ghUrl(),{headers:{...ghHead(),Accept:"application/vnd.github.raw+json"},cache:"no-store"});txt=await rr.text()}
+  let d; try{d=normalize(JSON.parse(txt))}catch(_){fail("Le fichier "+cfg.path+" est illisible.","fichier illisible");return false}
+  if(!force&&store.data&&store.data.updatedAt&&d.updatedAt&&d.updatedAt<store.data.updatedAt)return false; // copie plus ancienne servie par le cache GitHub
+  store.data=d;store.sha=j.sha;store.etag=r.headers.get("ETag");store.state="ok";store.err="";
+  return true;
+}
+function emit(){
+  const d=store.data||normalize({});
+  rows=Object.entries(d.cpts).map(([id,v])=>({id,...v}));
+  alloSync=d.sync.allo||null;loaded=true;render();renderConn();
+}
+function mutate(fn,msg){
+  store.busy++;
+  const p=store.q.then(async()=>{
+    for(let i=0;i<5;i++){
+      await pull(true);
+      if(store.state!=="ok")throw{code:"unavailable"};
+      const d=JSON.parse(JSON.stringify(store.data));
+      const out=fn(d); d.updatedAt=new Date().toISOString();
+      const body={message:msg||"Mise à jour du CRM",content:b64e(JSON.stringify(d,null,1))};
+      if(store.sha)body.sha=store.sha;
+      let r; try{r=await fetch(ghUrl(),{method:"PUT",headers:{...ghHead(),"Content-Type":"application/json"},body:JSON.stringify(body)})}catch(_){throw{code:"offline"}}
+      if(r.ok){const j=await r.json();store.sha=j.content&&j.content.sha;store.etag=null;store.data=d;store.savedAt=new Date().toISOString();emit();return out}
+      if(r.status===409||r.status===422){await new Promise(x=>setTimeout(x,500*(i+1)));continue}
+      const j=await r.json().catch(()=>null);const [l,s]=ghErr(r.status,j);store.err=l;store.errShort=s;renderConn();
+      throw{code:"github_"+r.status};
+    }
+    throw{code:"conflict"};
+  });
+  const done=()=>{store.busy--};
+  store.q=p.then(done,done);
+  return p;
+}
+const deepMerge=(a,b)=>{for(const [k,v] of Object.entries(b)){if(v&&typeof v==="object"&&!Array.isArray(v)&&a[k]&&typeof a[k]==="object"&&!Array.isArray(a[k]))deepMerge(a[k],v);else a[k]=v}return a};
+col={doc:id=>({
+  update:data=>mutate(d=>{if(!d.cpts[id])throw{code:"not_found"};deepMerge(d.cpts[id],JSON.parse(JSON.stringify(data)))},"Fiche "+id),
+  set:data=>mutate(d=>{d.cpts[id]=data},"Nouvelle fiche "+id)
+})};
+
+// ---- Allo : lecture directe des appels avec votre clé API ----
+const alloLocal={running:false,err:"",errShort:"",last:null};
+const addWorkdays=(s,n)=>{let x=s;for(let i=0;i<n;i++)x=nextWorkday(x);return x};
+const digits9=s=>{const d=String(s||"").replace(/\D/g,"");return d.length>=9?d.slice(-9):""};
+function phonesOf(r){
+  const out=new Set();
+  const add=s=>{for(const m of String(s||"").matchAll(/(?:\+33[\s.]?(?:\(0\))?|0033|0)[1-9](?:[\s.\-]?\d{2}){4}/g)){const k=digits9(m[0]);if(k)out.add(k)}};
+  add(r.tel);add(r.tel2);add(r.coordo&&r.coordo.tel);add(r.contact);
+  return out;
+}
+function classify(it){
+  const dur=+it.duration||0;
+  if(it.direction==="INBOUND")return"rappeler";
+  if(it.voicemail_left)return"message";
+  if(it.result==="VOICEMAIL"||it.detected_outbound_voicemail)return"pas_reponse";
+  if(it.result==="ANSWERED"&&dur>=15)return"rappeler";
+  return"pas_reponse";
+}
+function noteOf(it){
+  const dur=+it.duration||0, ds=dur?` (${Math.floor(dur/60)} min ${String(dur%60).padStart(2,"0")})`:"";
+  const head=it.direction==="INBOUND"?(dur>0?"Appel entrant"+ds:"Appel entrant manqué : à rappeler")
+    :it.voicemail_left?"Message laissé"+ds
+    :(it.result==="VOICEMAIL"||it.detected_outbound_voicemail)?"Messagerie, pas de message laissé"
+    :it.result==="ANSWERED"?"Appel"+ds:"Pas de réponse";
+  return("Allo · "+head+(it.summary?" : "+String(it.summary).trim():"")).slice(0,1500);
+}
+function applyAllo(d,items){
+  const s=d.sync.allo=d.sync.allo||{};
+  const done=new Set(s.done||[]), um=(s.unmatched||[]).slice(); let count=0;
+  const idx=[]; for(const [id,r] of Object.entries(d.cpts))for(const p of phonesOf(r))idx.push([p,id]);
+  const td=today();
+  for(const it of items){
+    if(done.has(it.id))continue;
+    const hit=idx.find(x=>x[0]===digits9(it.contact_number));
+    const t=Date.parse(it.date)||Date.now(), at=new Date(t).toISOString(), out=classify(it);
+    if(!hit){
+      if(!um.some(u=>u.key===it.id))um.push({key:it.id,number:it.contact_number||"",at,title:(it.contacts&&it.contacts[0]&&it.contacts[0].name)||"",summary:String(it.summary||"").slice(0,1200),status:out,note:noteOf(it)});
+      done.add(it.id);continue;
+    }
+    const r=d.cpts[hit[1]]; r.history=r.history||[];
+    const near=r.history.find(h=>!h.alloId&&h.kind!=="email"&&Math.abs(Date.parse(h.at)-t)<30*60000);
+    if(near){near.alloId=it.id;if(it.summary&&!/allo/i.test(near.note||""))near.note=((near.note||"")+" · Résumé Allo : "+String(it.summary).trim()).slice(0,1500);done.add(it.id);count++;continue}
+    let next="";
+    if(out==="pas_reponse"||out==="message")next=addWorkdays(td,2);
+    else if(it.direction==="INBOUND"&&!(+it.duration>0))next=td;
+    else next=(r.nextCall&&r.nextCall>=td)?r.nextCall:addWorkdays(td,5);
+    if(out!=="rappeler"&&r.nextCall&&r.nextCall>next)next=r.nextCall;
+    const entry={at,status:out,note:noteOf(it),source:"allo",alloId:it.id}; if(next)entry.nextCall=next;
+    r.history.push(entry); r.history.sort((a,b)=>String(a.at).localeCompare(String(b.at)));
+    if(!r.lastCall||at>=r.lastCall){r.lastCall=at;if(!CLOSED.has(r.status)){r.status=out;r.nextCall=next;r.nextTime=""}}
+    done.add(it.id);count++;
+  }
+  s.done=[...done].slice(-800);s.unmatched=um.slice(-40);s.lastSyncAt=new Date().toISOString();s.lastCount=count;s.lastError=null;
+  return count;
+}
+async function alloFetch(body){
+  const schemes=cfg.alloScheme?[cfg.alloScheme]:["Api-Key ",""];
+  let last;
+  for(const sc of schemes){
+    const r=await fetch("https://api.withallo.com/v2/api/conversations/items/search",{method:"POST",headers:{Authorization:sc+cfg.allo,"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(body)});
+    if(r.ok){if(cfg.alloScheme!==sc){cfg.alloScheme=sc;saveCfgLocal()}return r.json()}
+    const j=await r.json().catch(()=>null);
+    const em=j&&((j.error&&(j.error.message||j.error.code))||j.message||(typeof j.error==="string"&&j.error));
+    last=Object.assign(new Error(em||("HTTP "+r.status)),{status:r.status});
+    if(r.status!==401)break;
+  }
+  throw last;
+}
+async function runAllo(){
+  if(!cfg.allo||store.state!=="ok"||alloLocal.running)return;
+  alloLocal.running=true;alloLocal.err="";renderConn();
+  try{
+    const s=store.data.sync.allo||{};
+    const since=s.lastSyncAt?new Date(Date.parse(s.lastSyncAt)-86400000):new Date(Date.now()-7*86400000);
+    const iso=x=>x.toISOString().slice(0,10);
+    const items=[];
+    for(let page=1;page<=10;page++){
+      const j=await alloFetch({type:"CALL",sort:"DATE_ASC",size:100,page,date:{from:iso(since),to:iso(new Date(Date.now()+86400000))}});
+      items.push(...(j.data||[]));
+      if(!j.pagination||!j.pagination.has_more)break;
+    }
+    const done=new Set(s.done||[]), legacy=new Set(s.processedKeys||[]);
+    const fresh=items.filter(it=>it&&it.id&&!done.has(it.id)&&!legacy.has((it.contact_number||"")+"|"+String(it.date||"").slice(0,16))
+      &&!(!it.summary&&Date.now()-(Date.parse(it.date)||0)<10*60000)); // laisse à Allo le temps de rédiger le résumé
+    if(fresh.length){
+      const n=await mutate(d=>applyAllo(d,fresh),"Synchro Allo : "+fresh.length+" appel(s)");
+      if(n)toast(n>1?n+" appels Allo ajoutés aux fiches":"1 appel Allo ajouté à sa fiche");
+    }
+    alloLocal.last=new Date().toISOString();
+  }catch(e){
+    alloLocal.err=e&&e.status===401?"Clé Allo refusée : vérifiez-la dans Réglages."
+      :e&&e.status===403?"La clé Allo n'a pas accès aux conversations (droit CONVERSATIONS_READ)."
+      :e&&e.code?"Les appels Allo n'ont pas pu être enregistrés dans le CRM."
+      :"Allo injoignable : "+((e&&e.message)||"erreur inconnue");
+    alloLocal.errShort=e&&e.status===401?"clé refusée":e&&e.status===403?"droits insuffisants":"synchro en échec";
+  }
+  alloLocal.running=false;renderConn();
+}
+
+// ---- Réglages ----
+function fillCfg(){$("#cfg-gh").value=cfg.token||"";$("#cfg-allo").value=cfg.allo||"";$("#cfg-gmail").value=cfg.gmailUser||""}
+function showGate(){
+  if(store.state==="ok")return;
+  loaded=false;
+  $("#list").innerHTML=`<div class="empty">${store.state==="notoken"?"Connectez le CRM dans <b>Réglages</b> pour afficher vos prospects.":store.state==="loading"?"Chargement du CRM…":esc(store.err)}</div>`;
+  if(store.state!=="loading"){$("#setup").hidden=false;fillCfg()}
+}
+async function saveCfg(){
+  const m=$("#cfg-msg");
+  const tok=$("#cfg-gh").value.trim(), al=$("#cfg-allo").value.trim();
+  if(al!==cfg.allo)delete cfg.alloScheme;
+  cfg.token=tok;cfg.allo=al;cfg.gmailUser=$("#cfg-gmail").value.trim();saveCfgLocal();
+  if(!cfg.token){m.textContent="Le jeton GitHub est nécessaire pour charger le CRM.";m.className="ai-msg err";return}
+  m.textContent="Connexion à GitHub…";m.className="ai-msg";store.etag=null;
+  await pull(true);
+  if(store.state==="ok"){m.textContent="";$("#setup").hidden=true;emit();toast("CRM connecté");runAllo()}
+  else{m.textContent=store.err;m.className="ai-msg err"}
+}
+function clearCfg(){
+  cfg={...DEF};try{localStorage.removeItem(CFG_KEY)}catch(_){}
+  store.data=null;store.sha=null;store.etag=null;store.state="notoken";rows=[];alloSync=null;
+  fillCfg();render();showGate();renderConn();toast("Clés effacées de cet appareil");
+}
+const gmailUrl=m=>"https://mail.google.com/mail/?"+(cfg.gmailUser?"authuser="+encodeURIComponent(cfg.gmailUser)+"&":"")+"view=cm&fs=1&to="+encodeURIComponent(m.to)+"&su="+encodeURIComponent(m.subject)+"&body="+encodeURIComponent(m.body);
+
+(async()=>{
+  renderConn();
+  if(!cfg.token){showGate();return}
+  showGate();
+  await pull(true);
+  if(store.state==="ok"){emit();runAllo()}
+})();
+setInterval(()=>{if(document.visibilityState==="visible"&&store.state==="ok"&&!store.busy)pull().then(c=>c&&!store.busy&&emit())},45000);
+setInterval(()=>{if(document.visibilityState==="visible")runAllo()},120000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&store.state==="ok"){if(!store.busy)pull().then(c=>c&&!store.busy&&emit());runAllo()}});
+$("#add-type").innerHTML=TYPES.map(t=>`<option>${t}</option>`).join("");
+$("#add-zone").innerHTML=ZONES.map(z=>`<option${z==="Autres prospects"?" selected":""}>${z}</option>`).join("");
+renderConn();
 </script>
-</body></html>
+</body>
+</html>
